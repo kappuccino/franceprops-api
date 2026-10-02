@@ -2,7 +2,7 @@ import {randomBytes, scryptSync} from 'crypto'
 import mongoose from 'mongoose'
 import {nanoid} from 'nanoid'
 
-import {collation, modelAutoRemove} from '../db-tools.js'
+import {collation} from '../db-tools.js'
 
 const UserCredential = new mongoose.Schema({
 	credentialID: {type: String, required: true},
@@ -15,22 +15,24 @@ const UserCredential = new mongoose.Schema({
 })
 
 const User = new mongoose.Schema({
-	login: {type: String, autoRemove: true},
-	password: {type: String, autoRemove: true},
+	login: {type: String},
+	password: {type: String},
 	needChange: {type: Boolean, default: false},
-	change: {type: mongoose.Schema.ObjectId, autoRemove: true}, // No ref
-	role: {type: String, autoRemove: true},
-	permissions: {type: [String], autoRemove: true},
-	firstName: {type: String, autoRemove: true},
-	lastName: {type: String, autoRemove: true},
-	phone: {type: String, autoRemove: true},
-	auth: {type: String, autoRemove: true},
-	tfa: {type: String, autoRemove: true},
-	reset: {type: mongoose.Schema.ObjectId, autoRemove: true}, // No ref
-	recovery: {type: [String], autoRemove: true},
-	hidden: {type: Boolean, autoRemove: true},
+	change: {type: mongoose.Schema.ObjectId}, // No ref
+	role: {type: String},
+	permissions: {type: [String]},
+	firstName: {type: String},
+	lastName: {type: String},
+	auth: {type: String},
+	tfa: {type: String},
+	reset: {type: mongoose.Schema.ObjectId}, // No ref
+	recovery: {type: [String]},
+	hidden: {type: Boolean},
 
 	_picture: {type: mongoose.Schema.ObjectId, ref: 'Media'},
+
+	// Tenants a manager has full access to (admins see them all)
+	_tenants: {type: [mongoose.Schema.ObjectId], ref: 'Tenant', index: true},
 
 	credentials: [{type: UserCredential}],
 
@@ -67,7 +69,6 @@ User.pre('save', function createAuth(next){
 User.pre('save', function fixDates(next){
 	this.updated = new Date()
 	if(this.isNew && !this.created) this.created = new Date()
-	modelAutoRemove.call(this)
 
 	next()
 })

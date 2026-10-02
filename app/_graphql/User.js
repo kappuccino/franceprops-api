@@ -1,5 +1,6 @@
 import {genFailedMutation, getMedia} from './_helper.js'
 import * as userApi from '../user/user.js'
+import * as tenantApi from '../tenant/tenant.js'
 
 // --
 
@@ -14,7 +15,6 @@ const User = `
     needChange: Boolean
     change: String
     role: String
-    phone: String
     permissions: [String]
     auth: String
     isTFAenabled: Boolean
@@ -23,6 +23,9 @@ const User = `
 
     _picture: String
     picture(height:Int width:Int): Media
+
+    _tenants: [String]
+    tenants: [Tenant]
 
 		
 		credentials: [UserCredential]
@@ -57,6 +60,7 @@ const UserSearchParams = `
     sort: JSONObject
     search: String
     role: String
+    tenant: String
   }
 `
 
@@ -101,6 +105,7 @@ export default {
 			picture: (obj, args) => getMedia(obj._picture, args),
 			jwt: (obj, {expiresIn}) => userApi.createJWT(obj, {expiresIn}),
 			isTFAenabled: obj => Boolean(obj.tfa),
+			tenants: obj => tenantApi.getByIds(obj._tenants),
 		}
 	},
 

@@ -1,6 +1,6 @@
 import mongoose from 'mongoose'
 
-import {collation, modelAutoRemove} from '../db-tools.js'
+import {collation} from '../db-tools.js'
 
 const Template = new mongoose.Schema({
 	slug: {type: String},
@@ -20,8 +20,6 @@ Template.pre('save', async function(next){
 
 	this.updated = new Date()
 	if(this.isNew && !this.created) this.created = new Date()
-
-	modelAutoRemove.call(this)
 
 	next()
 })

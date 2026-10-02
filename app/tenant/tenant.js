@@ -4,6 +4,7 @@ import {escapeRegex, sanitizeAggregate} from '../tools.js'
 import {makeVersion} from '../version/version.js'
 
 const Tenant = mongoose.model('Tenant')
+const User = mongoose.model('User')
 
 
 //——— Public
@@ -33,6 +34,11 @@ export async function aggregate(params={}){
 export async function getById(_id){
 	if(!_id) throw new Error('no _id')
 	return Tenant.findOne({_id}).lean()
+}
+
+export async function getByIds(_ids){
+	if(!_ids?.length) return []
+	return Tenant.find({_id: {$in: _ids}}).sort({name: 1}).lean()
 }
 
 export async function create(data){
@@ -72,6 +78,9 @@ export async function remove(_id){
 	await makeVersion('tenant', _id, $tenant)
 
 	await Tenant.deleteOne({_id})
+
+	// Managers lose the access to the removed tenant
+	await User.updateMany({_tenants: _id}, {$pull: {_tenants: _id}})
 
 	return true
 }

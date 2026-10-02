@@ -1,6 +1,6 @@
 import mongoose from 'mongoose'
 
-import {collation, modelAutoRemove} from '../db-tools.js'
+import {collation} from '../db-tools.js'
 
 // A rental company of the French Props association
 const Tenant = new mongoose.Schema({
@@ -16,8 +16,6 @@ const Tenant = new mongoose.Schema({
 Tenant.pre('save', function(next){
 	this.updated = new Date()
 	if(this.isNew && !this.created) this.created = new Date()
-
-	modelAutoRemove.call(this)
 
 	next()
 })
