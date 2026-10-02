@@ -26,6 +26,7 @@ const User = `
 
     _tenants: [String]
     tenants: [Tenant]
+    allowedTenants: [Tenant]
 
 		
 		credentials: [UserCredential]
@@ -106,6 +107,8 @@ export default {
 			jwt: (obj, {expiresIn}) => userApi.createJWT(obj, {expiresIn}),
 			isTFAenabled: obj => Boolean(obj.tfa),
 			tenants: obj => tenantApi.getByIds(obj._tenants),
+			// All of them for an admin, his own for a manager (topbar selector)
+			allowedTenants: obj => tenantApi.getAllowed(obj),
 		}
 	},
 

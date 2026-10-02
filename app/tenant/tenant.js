@@ -41,6 +41,12 @@ export async function getByIds(_ids){
 	return Tenant.find({_id: {$in: _ids}}).sort({name: 1}).lean()
 }
 
+// Tenants a user may work on: all of them for an admin, his own for a manager
+export async function getAllowed(user){
+	if(['admin', 'superadmin'].includes(user?.role)) return Tenant.find().sort({name: 1}).lean()
+	return getByIds(user?._tenants)
+}
+
 export async function create(data){
 	delete data._id
 
