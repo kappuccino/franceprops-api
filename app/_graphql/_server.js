@@ -14,6 +14,7 @@ import Template from './Template.js'
 import Config from './Config.js'
 import Settings from './Settings.js'
 import MailQueue from './MailQueue.js'
+import Tenant from './Tenant.js'
 
 import debug from './_debug.js'
 import {dateScalar} from './_scalar.js'
@@ -47,6 +48,8 @@ const Schema = `
 
 		${Template.Query}
 		${MailQueue.Query}
+
+		${Tenant.Query}
 	}
 	
 	type RootMutation{
@@ -60,6 +63,8 @@ const Schema = `
 
 		${Template.Mutation}
 		${MailQueue.Mutation}
+
+		${Tenant.Mutation}
 	}
 `
 
@@ -76,6 +81,8 @@ const server = new ApolloServer({
 
 		...Template.TypeDefs,
 		...MailQueue.TypeDefs,
+
+		...Tenant.TypeDefs,
 	],
 
 	resolvers: {
@@ -92,6 +99,8 @@ const server = new ApolloServer({
 
 			...Template.QueryResolvers,
 			...MailQueue.QueryResolvers,
+
+			...Tenant.QueryResolvers,
 		},
 
 		RootMutation: {
@@ -105,6 +114,8 @@ const server = new ApolloServer({
 
 			...Template.MutationResolvers,
 			...MailQueue.MutationResolvers,
+
+			...Tenant.MutationResolvers,
 		},
 
 		...Token.Resolvers,
@@ -117,6 +128,8 @@ const server = new ApolloServer({
 
 		...Template.Resolvers,
 		...MailQueue.Resolvers,
+
+		...Tenant.Resolvers,
 	},
 
 	csrfPrevention: true,

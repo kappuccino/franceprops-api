@@ -12,6 +12,11 @@ export function allowed(context){
 	return Boolean(context?.user?._id)
 }
 
+// Throws unless the user is an admin or a superadmin
+export function requireAdmin(context){
+	if(!['admin', 'superadmin'].includes(context?.user?.role)) unauthorized()
+}
+
 export function unauthorized(msg){
 	throw new GraphQLError(msg || "You are not authorized", {
 		extensions: { code: 'UNAUTHORIZED' },
