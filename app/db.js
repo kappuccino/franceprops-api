@@ -9,6 +9,7 @@ import './mail-queue/model.js'
 import './settings/model.js'
 import './version/model.js'
 import './tenant/model.js'
+import './customer/model.js'
 
 mongoose.set('strictQuery', true)
 

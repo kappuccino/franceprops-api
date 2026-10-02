@@ -1,8 +1,9 @@
-import {randomBytes, scryptSync} from 'crypto'
+import {randomBytes} from 'crypto'
 import mongoose from 'mongoose'
 import {nanoid} from 'nanoid'
 
 import {collation} from '../db-tools.js'
+import {hashPassword} from '../password.js'
 
 const UserCredential = new mongoose.Schema({
 	credentialID: {type: String, required: true},
@@ -48,9 +49,7 @@ User.pre('save', function(next){
 	const modified = this.modifiedPaths() || []
 
 	if(modified.includes('password')){
-		const salt = randomBytes(16).toString('hex')
-		const pass = scryptSync(this.get('password'), salt, 64).toString('hex')
-		this.password = `${salt}:${pass}`
+		this.password = hashPassword(this.get('password'))
 	}
 
 	if(modified.includes('tfa') && this.get('tfa')){

@@ -16,6 +16,7 @@ import Config from './Config.js'
 import Settings from './Settings.js'
 import MailQueue from './MailQueue.js'
 import Tenant from './Tenant.js'
+import Customer from './Customer.js'
 
 import debug from './_debug.js'
 import {dateScalar} from './_scalar.js'
@@ -52,6 +53,7 @@ const Schema = `
 		${MailQueue.Query}
 
 		${Tenant.Query}
+		${Customer.Query}
 	}
 	
 	type RootMutation{
@@ -67,6 +69,7 @@ const Schema = `
 		${MailQueue.Mutation}
 
 		${Tenant.Mutation}
+		${Customer.Mutation}
 	}
 `
 
@@ -87,6 +90,7 @@ const schema = adminDirective(makeExecutableSchema({
 		...MailQueue.TypeDefs,
 
 		...Tenant.TypeDefs,
+		...Customer.TypeDefs,
 	],
 
 	resolvers: {
@@ -105,6 +109,7 @@ const schema = adminDirective(makeExecutableSchema({
 			...MailQueue.QueryResolvers,
 
 			...Tenant.QueryResolvers,
+			...Customer.QueryResolvers,
 		},
 
 		RootMutation: {
@@ -120,6 +125,7 @@ const schema = adminDirective(makeExecutableSchema({
 			...MailQueue.MutationResolvers,
 
 			...Tenant.MutationResolvers,
+			...Customer.MutationResolvers,
 		},
 
 		...Token.Resolvers,
@@ -134,6 +140,7 @@ const schema = adminDirective(makeExecutableSchema({
 		...MailQueue.Resolvers,
 
 		...Tenant.Resolvers,
+		...Customer.Resolvers,
 	},
 }))
 

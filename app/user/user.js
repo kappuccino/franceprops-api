@@ -1,5 +1,4 @@
 import {promisify} from 'util'
-import {scryptSync, timingSafeEqual} from 'crypto'
 import {nanoid} from 'nanoid'
 import mongoose from 'mongoose'
 import speakeasy from 'speakeasy'
@@ -10,6 +9,7 @@ import {sendMail, escapeRegex, sanitizeAggregate} from '../tools.js'
 import {generateToken, getTokenData, removeToken} from '../token/token.js'
 import {makeVersion} from '../version/version.js'
 import {sign} from '../jwt.js'
+import {checkPassword} from '../password.js'
 import * as redis from '../redis.js'
 import * as settingsApi from '../settings/settings.js'
 
@@ -37,13 +37,7 @@ export async function login(login, passwd){
 	if(!user) throw new Error('user not found')
 	if(!user.password) throw new Error('no password')
 
-	const [salt, key] = user.password.split(':')
-
-	const inputBuffer = scryptSync(passwd, salt, 64)
-	const userBuffer = Buffer.from(key, 'hex')
-	const match = timingSafeEqual(inputBuffer, userBuffer)
-
-	if(!match) return false
+	if(!checkPassword(passwd, user.password)) return false
 
 	if(user.needChange){
 		const change = new mongoose.Types.ObjectId()
