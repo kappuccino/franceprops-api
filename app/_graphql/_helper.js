@@ -12,9 +12,8 @@ export function allowed(context){
 	return Boolean(context?.user?._id)
 }
 
-// Throws unless the user is an admin or a superadmin
-export function requireAdmin(context){
-	if(!['admin', 'superadmin'].includes(context?.user?.role)) unauthorized()
+export function isAdmin(context){
+	return ['admin', 'superadmin'].includes(context?.user?.role)
 }
 
 export function unauthorized(msg){

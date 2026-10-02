@@ -38,9 +38,9 @@ export default {
 	//--
 
 	Query: `
-    getAllTemplates: [Template]
-    getTemplateById(_id: String!): Template
-    getTemplateBySlug(slug: String!): Template
+    getAllTemplates: [Template] @admin
+    getTemplateById(_id: String!): Template @admin
+    getTemplateBySlug(slug: String!): Template @admin
 	`,
 
 	QueryResolvers: {
@@ -57,8 +57,8 @@ export default {
 	//--
 
 	Mutation: `
-		updateTemplate(_id:String! data:JSONObject!): TemplateMutation
-		testTemplate(_id:String!): TemplateMutation
+		updateTemplate(_id:String! data:JSONObject!): TemplateMutation @admin
+		testTemplate(_id:String!): TemplateMutation @admin
 	`,
 
 	MutationResolvers: {

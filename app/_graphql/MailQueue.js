@@ -70,9 +70,9 @@ export default {
 	//--
 
 	Query: `
-    aggregateMailQueue(params: MailQueueAggregateParams): MailQueueAggregate
-    getMailQueueTags: [String]
-    getMailQueueAttachment(_id: String! index: Int!): MailQueueAttachment
+    aggregateMailQueue(params: MailQueueAggregateParams): MailQueueAggregate @admin
+    getMailQueueTags: [String] @admin
+    getMailQueueAttachment(_id: String! index: Int!): MailQueueAttachment @admin
 	`,
 
 	QueryResolvers: {
@@ -89,8 +89,8 @@ export default {
 	//--
 
 	Mutation: `
-		resendMailQueue(_id: String!): GenericMutation
-		removeMailQueue(_id: String!): GenericMutation
+		resendMailQueue(_id: String!): GenericMutation @admin
+		removeMailQueue(_id: String!): GenericMutation @admin
 	`,
 
 	MutationResolvers: {

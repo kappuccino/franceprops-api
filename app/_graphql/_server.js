@@ -2,6 +2,7 @@ import {ApolloServer} from '@apollo/server'
 import {gql as ApolloGQL} from 'graphql-tag'
 import {expressMiddleware} from '@as-integrations/express5'
 import {InMemoryLRUCache} from '@apollo/utils.keyvaluecache'
+import {makeExecutableSchema} from '@graphql-tools/schema'
 import express from 'express'
 import cors from 'cors'
 import 'graphql-type-json'
@@ -19,6 +20,7 @@ import Tenant from './Tenant.js'
 import debug from './_debug.js'
 import {dateScalar} from './_scalar.js'
 import authPlugin from './_auth.js'
+import {directiveTypeDefs, adminDirective} from './_directives.js'
 
 const debugGraphQL = false
 
@@ -68,8 +70,10 @@ const Schema = `
 	}
 `
 
-const server = new ApolloServer({
+// Built here (not by Apollo) so the @admin directive can wrap the resolvers
+const schema = adminDirective(makeExecutableSchema({
 	typeDefs: [
+		directiveTypeDefs,
 		Schema,
 		...Token.TypeDefs,
 		...User.TypeDefs,
@@ -131,6 +135,10 @@ const server = new ApolloServer({
 
 		...Tenant.Resolvers,
 	},
+}))
+
+const server = new ApolloServer({
+	schema,
 
 	csrfPrevention: true,
 

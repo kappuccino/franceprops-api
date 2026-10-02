@@ -1,4 +1,4 @@
-import {genFailedMutation, requireAdmin} from './_helper.js'
+import {genFailedMutation} from './_helper.js'
 import * as tenantApi from '../tenant/tenant.js'
 
 // --
@@ -42,7 +42,6 @@ const TenantMutation = `
 
 // --
 
-// Tenants are managed by admins and superadmins only
 export default {
 	TypeDefs: [
 		Tenant,
@@ -55,20 +54,13 @@ export default {
 	//--
 
 	Query: `
-    searchTenant(params: TenantSearchParams): TenantSearch
-    getTenantById(_id: String!): Tenant
+    searchTenant(params: TenantSearchParams): TenantSearch @admin
+    getTenantById(_id: String!): Tenant @admin
 	`,
 
 	QueryResolvers: {
-		searchTenant: (obj, {params={}}, context) => {
-			requireAdmin(context)
-			return tenantApi.aggregate(params)
-		},
-
-		getTenantById: (obj, {_id}, context) => {
-			requireAdmin(context)
-			return tenantApi.getById(_id)
-		},
+		searchTenant: (obj, {params={}}) => tenantApi.aggregate(params),
+		getTenantById: (obj, {_id}) => tenantApi.getById(_id),
 	},
 
 	//--
@@ -79,15 +71,14 @@ export default {
 	//--
 
 	Mutation: `
-		createTenant(data: JSONObject!): TenantMutation
-		updateTenant(_id: String! data: JSONObject!): TenantMutation
-		removeTenant(_id: String!): TenantMutation
+		createTenant(data: JSONObject!): TenantMutation @admin
+		updateTenant(_id: String! data: JSONObject!): TenantMutation @admin
+		removeTenant(_id: String!): TenantMutation @admin
 	`,
 
 	MutationResolvers: {
 		createTenant: async (obj, {data}, context) => {
 			try {
-				requireAdmin(context)
 				const tenant = await tenantApi.create(data)
 				return {success: true, tenant}
 			} catch(err) {
@@ -97,7 +88,6 @@ export default {
 
 		updateTenant: async (obj, {_id, data}, context) => {
 			try {
-				requireAdmin(context)
 				const tenant = await tenantApi.update(_id, data)
 				return {success: true, tenant}
 			} catch(err) {
@@ -107,7 +97,6 @@ export default {
 
 		removeTenant: async (obj, {_id}, context) => {
 			try {
-				requireAdmin(context)
 				await tenantApi.remove(_id)
 				return {success: true}
 			} catch(err) {

@@ -1,4 +1,4 @@
-import {genFailedMutation} from './_helper.js'
+import {genFailedMutation, isAdmin, unauthorized} from './_helper.js'
 import * as userApi from '../user/user.js'
 import {getByAuth} from '../user/user.js'
 import {userFromToken} from '../server-middleware.js'
@@ -76,8 +76,15 @@ export default {
 		loginOption: (doc, {auth}) => userApi.loginOption(auth),
 		registerOption: (doc, vars, context) => userApi.registerOption(context.user),
 
-		qrcodeTFA: (obj, {_id}) => userApi.qrcodeTFA(_id),
-		verifyTFA: (obj, {_id, token}) => userApi.verifyTFA(_id, token),
+		// 2FA setup of the connected user (or an admin)
+		qrcodeTFA: (obj, {_id}, context) => {
+			if(!isAdmin(context) && context.user?._id?.toString() !== _id) unauthorized()
+			return userApi.qrcodeTFA(_id)
+		},
+		verifyTFA: (obj, {_id, token}, context) => {
+			if(!isAdmin(context) && context.user?._id?.toString() !== _id) unauthorized()
+			return userApi.verifyTFA(_id, token)
+		},
 		checkTFA: (obj, {auth, token}) => userApi.checkTFA(auth, token),
 		recoverTFA: (obj, {auth, code}) => userApi.recoverTFA(auth, code)
 	},

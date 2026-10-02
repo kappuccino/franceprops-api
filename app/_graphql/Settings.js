@@ -77,7 +77,7 @@ export default {
 	//--
 
 	Mutation: `
-		updateSettings(slug:String data:JSONObject!): SettingsMutation
+		updateSettings(slug:String data:JSONObject!): SettingsMutation @admin
 
 	`,
 

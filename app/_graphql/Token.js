@@ -26,7 +26,7 @@ export default {
 	//--
 
 	Query: `
-		getToken(token:String!): Token
+		getToken(token:String!): Token @admin
 	`,
 
 	QueryResolvers: {
@@ -48,7 +48,7 @@ export default {
 	//--
 
 	Mutation: `
-		generateToken(args:JSONObject! minutes:Int id:String): TokenMutation
+		generateToken(args:JSONObject! minutes:Int id:String): TokenMutation @admin
 	`,
 
 	MutationResolvers: {

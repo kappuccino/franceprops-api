@@ -1,6 +1,13 @@
-import {genFailedMutation, getMedia} from './_helper.js'
+import {genFailedMutation, getMedia, isAdmin, unauthorized} from './_helper.js'
 import * as userApi from '../user/user.js'
 import * as tenantApi from '../tenant/tenant.js'
+
+// Fields a user may change on his own profile (Mon compte, 2FA)
+const SELF_FIELDS = ['firstName', 'lastName', 'password', '_picture', 'tfa']
+
+function isSelf(context, _id){
+	return Boolean(_id) && context?.user?._id?.toString() === _id
+}
 
 // --
 
@@ -89,13 +96,17 @@ export default {
 	//--
 
 	Query: `
-    searchUser(params:UserSearchParams): UserSearch
+    searchUser(params:UserSearchParams): UserSearch @admin
     getUserById(_id: String!): User
 	`,
 
 	QueryResolvers: {
 		searchUser: (obj, {params}) => userApi.aggregate(params),
-		getUserById: (obj, {_id}) => userApi.getById(_id),
+		// Admins read anyone, the others their own profile
+		getUserById: (obj, {_id}, context) => {
+			if(!isAdmin(context) && !isSelf(context, _id)) unauthorized()
+			return userApi.getById(_id)
+		},
 	},
 
 	// --
@@ -115,9 +126,9 @@ export default {
 	//--
 
 	Mutation: `
-		createUser(data:JSONObject!): UserMutation
+		createUser(data:JSONObject!): UserMutation @admin
 		updateUser(_id:String! data:JSONObject!): UserMutation
-		removeUser(_id:String!): UserMutation
+		removeUser(_id:String!): UserMutation @admin
 	`,
 
 	MutationResolvers: {
@@ -130,8 +141,14 @@ export default {
 			}
 		},
 
+		// Admins update anyone, the others their own profile (SELF_FIELDS only)
 		updateUser: async (obj, {_id, data}, context) => {
 			try {
+				if(!isAdmin(context)){
+					if(!isSelf(context, _id)) unauthorized()
+					data = Object.fromEntries(Object.entries(data).filter(([key]) => SELF_FIELDS.includes(key)))
+				}
+
 				const user = await userApi.update(_id, data)
 				return {success: true, user}
 			} catch(err) {
