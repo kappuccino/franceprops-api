@@ -91,6 +91,7 @@ console.log('[•] Starting server')
 Promise.all([
 	import('./media/route.js'),
 	import('./broadcast/route.js'),
+	import('./mailjet/route.js'),
 ])
 	.then(routes => {
 		console.log('[•] Register routes')

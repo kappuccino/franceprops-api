@@ -1,7 +1,7 @@
 import mongoose from 'mongoose'
 import path from 'path'
 import nodemailer from 'nodemailer'
-import {randomBytes} from 'crypto'
+import {randomBytes, randomUUID} from 'crypto'
 import {nanoid} from 'nanoid'
 
 import {getBySlug as getTemplateBySlug} from './template/template.js'
@@ -209,50 +209,68 @@ export async function getMailBrand(){
 	return {name, prefix}
 }
 
-export async function sendMail(data, logFailure=true){
+// data.tag (or the template slug) tells where the mail comes from in the mail-queue
+export async function sendMail(data){
 
 	const brand = await getMailBrand()
+	const mailID = randomUUID()
+
+	// Only used to build the mail, never handed over to nodemailer
+	const {tag, useTemplate, variables, ...mail} = data
 
 	const options = {
 		from: `${brand.name} <${process.env.MAIL_FROM}>`,
 		replyTo: `${brand.name} <${process.env.MAIL_REPLY}>`,
-		...data,
+		...mail,
 	}
 
-	if(data.useTemplate){
-		const template = await getTemplateBySlug(data.useTemplate)
-		if(!template) throw new Error(`mail template "${data.useTemplate}" not found`)
+	if(useTemplate){
+		const template = await getTemplateBySlug(useTemplate)
+		if(!template) throw new Error(`mail template "${useTemplate}" not found`)
 
-		data.subject = template.title
-		data.text = template.content
+		mail.subject = template.title
+		mail.text = template.content
 	}
 
 	// Subjects are stored without the entity prefix
-	if(data.subject && !data.subject.startsWith(brand.prefix)){
-		options.subject = `${brand.prefix} ${data.subject}`
+	if(mail.subject && !mail.subject.startsWith(brand.prefix)){
+		options.subject = `${brand.prefix} ${mail.subject}`
 	}
 
+	// A mail resent from the mail-queue already holds its headers and body.
 	// Without a Mailjet template the body is sent as is: the template is the only
 	// thing that turns x-mj-vars into content, the mail would be empty otherwise
-	if(!options.headers && !process.env.MAIL_TEMPLATE){
-		const text = computedEmailVariables(data.text || '', data.variables)
+	if(!mail.headers && !process.env.MAIL_TEMPLATE){
+		const text = computedEmailVariables(mail.text || '', variables)
 		options.text = text
-		options.html = data.html
-			? computedEmailVariables(data.html, data.variables)
+		options.html = mail.html
+			? computedEmailVariables(mail.html, variables)
 			: text.replaceAll('\n', '<br>')
 	}
 
-	if(!options.headers && process.env.MAIL_TEMPLATE){
-		let content = (data.html || data.text || '').replaceAll('\n', '<br>')
-		content = computedEmailVariables(content, data.variables)
+	if(!mail.headers && process.env.MAIL_TEMPLATE){
+		let content = (mail.html || mail.text || '').replaceAll('\n', '<br>')
+		content = computedEmailVariables(content, variables)
 
 		options.headers = {
 			'x-mj-templateid': process.env.MAIL_TEMPLATE,
 			'x-mj-templatelanguage': '1',
 			'x-mj-vars': JSON.stringify({ // https://dev.mailjet.com/smtp-relay/custom-headers/
-				title: data.subject,
+				title: mail.subject,
 				content
 			})
+		}
+	}
+
+	// Ties the Mailjet webhook events (bounce, blocked, spam) to the mail-queue entry
+	options.headers = {...options.headers, 'x-mj-eventpayload': mailID}
+
+	// Every mail is kept (sent or not) so it can be resent, a failure here must not mask the SMTP result
+	async function queueMail(status, error){
+		try {
+			await createMailQueue({id: mailID, tag: tag || useTemplate, status, error, raw: options})
+		} catch(err){
+			console.log('[sendMail] mail-queue failed', err.message)
 		}
 	}
 
@@ -267,18 +285,13 @@ export async function sendMail(data, logFailure=true){
 
 		transporter.sendMail(options, async (error, info) => {
 			if(error){
-
-				if(logFailure){
-					await createMailQueue({
-						raw: options,
-						error: error.response
-					})
-				}
-
+				await queueMail('error', error.response || error.message)
 				return reject(error)
 			}
 
 			console.log('Message sent: %s', info.messageId)
+			await queueMail('sent')
+
 			resolve(true)
 		})
 

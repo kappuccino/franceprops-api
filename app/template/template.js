@@ -45,6 +45,7 @@ export async function test(_id, reqUser){
 	if(!template) throw new Error('Template not exists')
 
 	await sendMail({
+		tag: 'template-test',
 		to: [reqUser.login],
 		subject: template.title,
 		text: template.content
