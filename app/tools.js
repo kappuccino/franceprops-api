@@ -274,11 +274,13 @@ export async function sendMail(data){
 		}
 	}
 
-	return new Promise((resolve, reject) => {
+	return new Promise(async (resolve, reject) => {
 
+		// Delivery off: the mail is only kept in the mail-queue (status held)
 		if(process.env.MAIL_FAKE) {
-			console.log('🦄 Fake ! (mail not sent)')
-			return resolve('🦄 Fake ! (mail not sent)')
+			await queueMail('held')
+			console.log('🦄 Fake ! (mail kept in the mail-queue, not sent)')
+			return resolve(true)
 		}
 
 		const transporter = createMailTransporter()
