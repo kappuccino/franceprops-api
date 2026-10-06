@@ -541,8 +541,8 @@ async function _makeMatch(params){
 		query.where('role', params.role)
 	}
 
-	if(params.tenant){
-		query.where('_tenants', new mongoose.Types.ObjectId(params.tenant))
+	if(params._tenant){
+		query.where('_tenants', new mongoose.Types.ObjectId(params._tenant))
 	}
 
 	// Ne jamais resortir le user masqué

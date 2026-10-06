@@ -16,6 +16,13 @@ export function isAdmin(context){
 	return ['admin', 'superadmin'].includes(context?.user?.role)
 }
 
+// Admins reach every tenant, the others only theirs (user._tenants)
+export function canAccessTenant(context, _tenant){
+	if(!_tenant) return false
+	if(isAdmin(context)) return true
+	return (context?.user?._tenants || []).some(t => t.toString() === _tenant)
+}
+
 export function unauthorized(msg){
 	throw new GraphQLError(msg || "You are not authorized", {
 		extensions: { code: 'UNAUTHORIZED' },

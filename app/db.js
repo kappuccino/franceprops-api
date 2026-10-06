@@ -10,6 +10,7 @@ import './settings/model.js'
 import './version/model.js'
 import './tenant/model.js'
 import './customer/model.js'
+import './product/model.js'
 
 mongoose.set('strictQuery', true)
 

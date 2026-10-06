@@ -35,7 +35,6 @@ const User = `
     tenants: [Tenant]
     allowedTenants: [Tenant]
 
-		
 		credentials: [UserCredential]
 		
 		tokenVersion: Int
@@ -68,7 +67,7 @@ const UserSearchParams = `
     sort: JSONObject
     search: String
     role: String
-    tenant: String
+    _tenant: String
   }
 `
 

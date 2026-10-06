@@ -1,8 +1,8 @@
 import {genFailedMutation, isAdmin, unauthorized} from './_helper.js'
-import * as userApi from '../user/user.js'
-import {getByAuth} from '../user/user.js'
 import {userFromToken} from '../server-middleware.js'
 import {setSessionCookie, clearSessionCookie} from '../session.js'
+
+import * as userApi from '../user/user.js'
 
 // --
 
