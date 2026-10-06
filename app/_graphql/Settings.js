@@ -1,4 +1,4 @@
-import {genFailedMutation, getCountryName} from './_helper.js'
+import {genFailedMutation} from './_helper.js'
 import * as settingsApi from '../settings/settings.js'
 
 // --
@@ -11,17 +11,6 @@ const Settings = `
 		brandName: String
 		brandShort: String
 
-		companyName: String
-		companyPerson: String
-		companyAddress: String
-		companyPostal: String
-		companyCity: String
-		companyCountry: String
-		companyCountryName: String
-		
-		contactPhone: String
-		contactMail: String
-		
 		mailCopy: [String]
 		mailSubjectPrefix: String
   }
@@ -70,7 +59,6 @@ export default {
 
 	Resolvers: {
 		Settings: {
-			companyCountryName: obj => getCountryName(obj.companyCountry, obj.countryName)
 		}
 	},
 

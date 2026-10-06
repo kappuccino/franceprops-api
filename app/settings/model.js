@@ -9,16 +9,6 @@ const Settings = new mongoose.Schema({
 	brandName: {type: String},
 	brandShort: {type: String},
 
-	companyName: {type: String},
-	companyPerson: {type: String},
-	companyAddress: {type: String},
-	companyPostal: {type: String},
-	companyCity: {type: String},
-	companyCountry: {type: String},
-
-	contactPhone: {type: String},
-	contactMail: {type: String},
-
 	mailCopy: [{type: String}],
 	mailSubjectPrefix: {type: String},
 
