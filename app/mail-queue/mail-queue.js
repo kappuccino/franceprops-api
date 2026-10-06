@@ -95,7 +95,7 @@ export async function resend(_id){
 		console.log('[mail-queue] resend failed', err.message)
 	}
 
-	await MailQueue.updateOne({_id}, {resent: new Date()})
+	await MailQueue.updateOne({_id}, {resentAt: new Date()})
 
 	return success
 }
@@ -104,12 +104,12 @@ export async function resend(_id){
 export async function appendEvent(event){
 	if(!ERROR_EVENTS.includes(event?.event) || !event.Payload) return
 
-	const date = event.time ? new Date(event.time * 1000) : new Date()
+	const occurredAt = event.time ? new Date(event.time * 1000) : new Date()
 
 	// Mailjet retries the whole batch on a failure, an event already stored is skipped
 	const exists = await MailQueue.exists({
 		id: event.Payload,
-		events: {$elemMatch: {type: event.event, email: event.email, date}}
+		events: {$elemMatch: {type: event.event, email: event.email, occurredAt}}
 	})
 	if(exists) return
 
@@ -121,10 +121,10 @@ export async function appendEvent(event){
 		{id: event.Payload},
 		{
 			$set: {status: event.event},
-			$setOnInsert: {date: new Date()},
+			$setOnInsert: {createdAt: new Date()},
 			$push: {
 				events: {
-					date,
+					occurredAt,
 					type: event.event,
 					email: event.email,
 					error: error || event.source || null,

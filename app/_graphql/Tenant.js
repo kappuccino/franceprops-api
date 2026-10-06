@@ -8,8 +8,8 @@ const Tenant = `
     _id: String
     name: String
 
-    created: Date
-    updated: Date
+    createdAt: Date
+    updatedAt: Date
   }
 `
 

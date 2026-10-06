@@ -12,16 +12,16 @@ const Taxonomy = new mongoose.Schema({
 	nameFR: {type: String, trim: true},
 	nameEN: {type: String, trim: true},
 
-	created: Date,
-	updated: Date
+	createdAt: Date,
+	updatedAt: Date
 }, {
 	collection: 'taxonomy',
 	collation
 })
 
 Taxonomy.pre('save', function(next){
-	this.updated = new Date()
-	if(this.isNew && !this.created) this.created = new Date()
+	this.updatedAt = new Date()
+	if(this.isNew && !this.createdAt) this.createdAt = new Date()
 
 	next()
 })

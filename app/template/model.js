@@ -9,8 +9,8 @@ const Template = new mongoose.Schema({
 	title: {type: String},
 	content: {type: String},
 
-	created: Date,
-	updated: Date
+	createdAt: Date,
+	updatedAt: Date
 }, {
 	collection: 'template',
 	collation
@@ -18,8 +18,8 @@ const Template = new mongoose.Schema({
 
 Template.pre('save', async function(next){
 
-	this.updated = new Date()
-	if(this.isNew && !this.created) this.created = new Date()
+	this.updatedAt = new Date()
+	if(this.isNew && !this.createdAt) this.createdAt = new Date()
 
 	next()
 })

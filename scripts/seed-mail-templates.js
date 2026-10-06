@@ -49,7 +49,7 @@ const now = new Date()
 for(const doc of docs){
 	const res = await col.updateOne(
 		{slug: doc.slug},
-		{$setOnInsert: {...doc, created: now, updated: now}},
+		{$setOnInsert: {...doc, createdAt: now, updatedAt: now}},
 		{upsert: true}
 	)
 	console.log(doc.slug, res.upsertedCount ? 'créé' : 'existait déjà')

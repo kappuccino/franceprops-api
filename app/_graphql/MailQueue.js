@@ -6,20 +6,20 @@ import * as mailQueueApi from '../mail-queue/mail-queue.js'
 const MailQueue = `
   type MailQueue {
     _id: String
-    date: Date
+    createdAt: Date
     id: String
     tag: String
     status: String
     error: String
     raw: JSONObject
     events: [MailQueueEvent]
-    resent: Date
+    resentAt: Date
   }
 `
 
 const MailQueueEvent = `
   type MailQueueEvent {
-    date: Date
+    occurredAt: Date
     type: String
     email: String
     error: String

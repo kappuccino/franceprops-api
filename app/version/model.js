@@ -3,7 +3,7 @@ import mongoose from 'mongoose'
 import {collation} from '../db-tools.js'
 
 const VersionItem = new mongoose.Schema({
-	date: Date,
+	createdAt: Date,
 	data: {type: mongoose.Schema.Types.Mixed}
 })
 

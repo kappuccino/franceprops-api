@@ -38,8 +38,8 @@ const User = new mongoose.Schema({
 	credentials: [{type: UserCredential}],
 
 	tokenVersion: {type: Number, default: 1},
-	created: Date,
-	updated: Date
+	createdAt: Date,
+	updatedAt: Date
 }, {
 	collection: 'user',
 	collation
@@ -66,8 +66,8 @@ User.pre('save', function createAuth(next){
 })
 
 User.pre('save', function fixDates(next){
-	this.updated = new Date()
-	if(this.isNew && !this.created) this.created = new Date()
+	this.updatedAt = new Date()
+	if(this.isNew && !this.createdAt) this.createdAt = new Date()
 
 	next()
 })

@@ -12,8 +12,8 @@ const Template = `
 		title: String
 		content: String
 	
-	  created: Date
-    updated: Date
+	  createdAt: Date
+    updatedAt: Date
   }
 `
 

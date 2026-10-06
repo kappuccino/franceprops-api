@@ -12,14 +12,14 @@ const Settings = new mongoose.Schema({
 	mailCopy: [{type: String}],
 	mailSubjectPrefix: {type: String},
 
-	updated: Date
+	updatedAt: Date
 }, {
 	collection: 'settings',
 	collation
 })
 
 Settings.pre('save', async function(next){
-	this.updated = new Date()
+	this.updatedAt = new Date()
 	next()
 })
 

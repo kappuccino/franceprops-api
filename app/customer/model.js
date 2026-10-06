@@ -22,8 +22,8 @@ const Customer = new mongoose.Schema({
 	city: {type: String, trim: true},
 	country: {type: String},
 
-	created: Date,
-	updated: Date
+	createdAt: Date,
+	updatedAt: Date
 }, {
 	collection: 'customer',
 	collation
@@ -33,8 +33,8 @@ Customer.pre('save', function(next){
 	if(this.isModified('password') && this.password) this.password = hashPassword(this.password)
 	if(!this.auth) this.auth = nanoid(36)
 
-	this.updated = new Date()
-	if(this.isNew && !this.created) this.created = new Date()
+	this.updatedAt = new Date()
+	if(this.isNew && !this.createdAt) this.createdAt = new Date()
 
 	next()
 })

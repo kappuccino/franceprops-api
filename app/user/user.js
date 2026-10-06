@@ -298,7 +298,7 @@ export async function createAuthToken(_id){
 	const ttl = 24*60*60 // 1jours
 
 	const auth = {
-		date: new Date(),
+		createdAt: new Date(),
 		ttl,
 		token,
 		user: {

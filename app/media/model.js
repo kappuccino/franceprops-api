@@ -26,16 +26,16 @@ const Media = mongoose.Schema({
 	captionFR: {type: String},
 	captionEN: {type: String},
 
-	created: Date,
-	updated: Date
+	createdAt: Date,
+	updatedAt: Date
 }, {
 	collection: 'media',
 	collation
 })
 
 Media.pre('save', function (next) {
-	this.updated = new Date()
-	if (this.isNew && !this.created) this.created = new Date()
+	this.updatedAt = new Date()
+	if (this.isNew && !this.createdAt) this.createdAt = new Date()
 
 	next()
 })

@@ -20,8 +20,8 @@ const Customer = `
     country: String
     countryName: String
 
-    created: Date
-    updated: Date
+    createdAt: Date
+    updatedAt: Date
   }
 `
 

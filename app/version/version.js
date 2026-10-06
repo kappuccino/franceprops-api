@@ -5,7 +5,7 @@ const Version = mongoose.model('Version')
 export async function makeVersion(source, _source, $data){
 
 	const item = {
-		date: new Date(),
+		createdAt: new Date(),
 		data: $data.toObject ? $data.toObject() : $data
 	}
 

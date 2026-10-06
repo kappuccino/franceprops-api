@@ -34,7 +34,7 @@ export async function aggregate(params={}){
 
 	const $match = makeMatch(params)
 
-	if(!params.sort) params.sort = {created: -1}
+	if(!params.sort) params.sort = {createdAt: -1}
 
 	const aggLimited = sanitizeAggregate([{$match}, {$project: PRIVATE}], params)
 	const aggNoLimit = [{$match}, {$count: 'totalDocuments'}]

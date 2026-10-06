@@ -28,7 +28,7 @@ export async function add({token, key}, _product){
 	const $selection = await findOrCreate({token, key})
 
 	if(!$selection.items.some(i => i._product.toString() === _product)){
-		$selection.items.push({_product, added: new Date()})
+		$selection.items.push({_product, addedAt: new Date()})
 	}
 
 	touch($selection)

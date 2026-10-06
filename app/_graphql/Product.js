@@ -12,8 +12,8 @@ const Product = `
     ref: String
     title: String
 
-    created: Date
-    updated: Date
+    createdAt: Date
+    updatedAt: Date
   }
 `
 

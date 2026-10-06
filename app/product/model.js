@@ -8,8 +8,8 @@ const Product = new mongoose.Schema({
 	ref: {type: String, trim: true, required: true},
 	title: {type: String, trim: true},
 
-	created: Date,
-	updated: Date
+	createdAt: Date,
+	updatedAt: Date
 }, {
 	collection: 'product',
 	collation
@@ -19,8 +19,8 @@ const Product = new mongoose.Schema({
 Product.index({_tenant: 1, ref: 1}, {unique: true})
 
 Product.pre('save', function(next){
-	this.updated = new Date()
-	if(this.isNew && !this.created) this.created = new Date()
+	this.updatedAt = new Date()
+	if(this.isNew && !this.createdAt) this.createdAt = new Date()
 
 	next()
 })

@@ -11,14 +11,14 @@ const Selection = `
     key: String
     count: Int
     items: [SelectionItem]
-    updated: Date
+    updatedAt: Date
   }
 `
 
 const SelectionItem = `
   type SelectionItem {
     _product: String
-    added: Date
+    addedAt: Date
     product: Product
   }
 `

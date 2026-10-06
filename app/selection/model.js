@@ -4,7 +4,7 @@ import {collation} from '../db-tools.js'
 
 const SelectionItem = new mongoose.Schema({
 	_product: {type: mongoose.Schema.ObjectId, ref: 'Product', required: true},
-	added: Date
+	addedAt: Date
 }, {_id: false})
 
 // Products a website visitor keeps aside. Anonymous: reached by its random key
@@ -16,16 +16,16 @@ const Selection = new mongoose.Schema({
 	items: [SelectionItem],
 
 	expireAt: {type: Date, expires: 0},
-	created: Date,
-	updated: Date
+	createdAt: Date,
+	updatedAt: Date
 }, {
 	collection: 'selection',
 	collation
 })
 
 Selection.pre('save', function(next){
-	this.updated = new Date()
-	if(this.isNew && !this.created) this.created = new Date()
+	this.updatedAt = new Date()
+	if(this.isNew && !this.createdAt) this.createdAt = new Date()
 
 	next()
 })
