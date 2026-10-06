@@ -4,6 +4,29 @@ import mongoose from 'mongoose'
 
 const docs = [
 	{
+		slug: 'customer-email-code',
+		name: 'Client - Code de changement d\'email',
+		title: 'Confirmez votre nouvelle adresse',
+		content: 'Bonjour,\n\nVoici votre code pour confirmer cette nouvelle adresse : *|CODE|*\n'
+			+ 'Il est valable 15 minutes.\n\n'
+			+ "Si vous n'êtes pas à l'origine de cette demande, ignorez ce message."
+	},
+	{
+		slug: 'customer-email-changed',
+		name: 'Client - Email modifié',
+		title: 'Votre adresse email a été modifiée',
+		content: 'Bonjour,\n\nL\'adresse email de votre compte a été remplacée par *|EMAIL|*.\n\n'
+			+ "Si vous n'êtes pas à l'origine de ce changement, contactez-nous rapidement."
+	},
+	{
+		slug: 'customer-signup-code',
+		name: 'Client - Code de création de compte',
+		title: 'Votre code de confirmation',
+		content: 'Bonjour,\n\nVoici votre code pour créer votre compte : *|CODE|*\n'
+			+ 'Il est valable 15 minutes.\n\n'
+			+ "Si vous n'êtes pas à l'origine de cette demande, ignorez ce message."
+	},
+	{
 		slug: 'user-reset-password',
 		name: 'Utilisateur - Nouveau mot de passe',
 		title: 'Nouveau mot de passe',

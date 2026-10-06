@@ -1,24 +1,35 @@
 import {defaultFieldResolver} from 'graphql'
 import {mapSchema, getDirective, MapperKind} from '@graphql-tools/utils'
 
-import {isAdmin, unauthorized} from './_helper.js'
+import {isAdmin, isService, unauthorized} from './_helper.js'
 
-// `@admin` on a Query/Mutation field: only admins and superadmins may run it
-export const directiveTypeDefs = `
-	directive @admin on FIELD_DEFINITION
-`
+// Role directives on Query/Mutation fields:
+//   @admin    admins and superadmins only
+//   @service  service accounts only (the website Nuxt server)
+const roles = {
+	admin: isAdmin,
+	service: isService,
+}
 
-export function adminDirective(schema){
+export const directiveTypeDefs = Object.keys(roles)
+	.map(name => `directive @${name} on FIELD_DEFINITION`)
+	.join('\n')
+
+export function roleDirectives(schema){
 	return mapSchema(schema, {
 		[MapperKind.OBJECT_FIELD]: fieldConfig => {
-			if(!getDirective(schema, fieldConfig, 'admin')?.[0]) return fieldConfig
+			const checks = Object.entries(roles)
+				.filter(([name]) => getDirective(schema, fieldConfig, name)?.[0])
+				.map(([, check]) => check)
+
+			if(!checks.length) return fieldConfig
 
 			const {resolve = defaultFieldResolver} = fieldConfig
 
 			return {
 				...fieldConfig,
 				resolve(source, args, context, info){
-					if(!isAdmin(context)) unauthorized()
+					if(!checks.some(check => check(context))) unauthorized()
 					return resolve(source, args, context, info)
 				}
 			}

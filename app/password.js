@@ -15,3 +15,15 @@ export function checkPassword(plain, stored){
 
 	return timingSafeEqual(scryptSync(plain, salt, 64), Buffer.from(key, 'hex'))
 }
+
+// Same rules as the password forms (dashboard, website): 8 characters, an
+// uppercase, a lowercase, a digit and a special character
+export function isPasswordStrong(plain){
+	const pass = (plain || '').trim()
+
+	return pass.length >= 8
+		&& /[A-Z]/.test(pass)
+		&& /[a-z]/.test(pass)
+		&& /[0-9]/.test(pass)
+		&& /[!@#$%^&*()_+~`|}{[\]:;?><,./=-]/.test(pass)
+}

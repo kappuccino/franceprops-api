@@ -23,7 +23,7 @@ import Taxonomy from './Taxonomy.js'
 import debug from './_debug.js'
 import {dateScalar} from './_scalar.js'
 import authPlugin from './_auth.js'
-import {directiveTypeDefs, adminDirective} from './_directives.js'
+import {directiveTypeDefs, roleDirectives} from './_directives.js'
 
 const debugGraphQL = false
 
@@ -79,8 +79,8 @@ const Schema = `
 	}
 `
 
-// Built here (not by Apollo) so the @admin directive can wrap the resolvers
-const schema = adminDirective(makeExecutableSchema({
+// Built here (not by Apollo) so the role directives (@admin, @service) can wrap the resolvers
+const schema = roleDirectives(makeExecutableSchema({
 	typeDefs: [
 		directiveTypeDefs,
 		Schema,
