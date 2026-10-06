@@ -19,6 +19,7 @@ import Tenant from './Tenant.js'
 import Customer from './Customer.js'
 import Product from './Product.js'
 import Taxonomy from './Taxonomy.js'
+import Selection from './Selection.js'
 
 import debug from './_debug.js'
 import {dateScalar} from './_scalar.js'
@@ -58,6 +59,7 @@ const Schema = `
 		${Customer.Query}
 		${Product.Query}
 		${Taxonomy.Query}
+		${Selection.Query}
 	}
 	
 	type RootMutation{
@@ -76,6 +78,7 @@ const Schema = `
 		${Customer.Mutation}
 		${Product.Mutation}
 		${Taxonomy.Mutation}
+		${Selection.Mutation}
 	}
 `
 
@@ -99,6 +102,7 @@ const schema = roleDirectives(makeExecutableSchema({
 		...Customer.TypeDefs,
 		...Product.TypeDefs,
 		...Taxonomy.TypeDefs,
+		...Selection.TypeDefs,
 	],
 
 	resolvers: {
@@ -120,6 +124,7 @@ const schema = roleDirectives(makeExecutableSchema({
 			...Customer.QueryResolvers,
 			...Product.QueryResolvers,
 			...Taxonomy.QueryResolvers,
+			...Selection.QueryResolvers,
 		},
 
 		RootMutation: {
@@ -138,6 +143,7 @@ const schema = roleDirectives(makeExecutableSchema({
 			...Customer.MutationResolvers,
 			...Product.MutationResolvers,
 			...Taxonomy.MutationResolvers,
+			...Selection.MutationResolvers,
 		},
 
 		...Token.Resolvers,
@@ -155,6 +161,7 @@ const schema = roleDirectives(makeExecutableSchema({
 		...Customer.Resolvers,
 		...Product.Resolvers,
 		...Taxonomy.Resolvers,
+		...Selection.Resolvers,
 	},
 }))
 
