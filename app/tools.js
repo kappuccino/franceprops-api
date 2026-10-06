@@ -249,8 +249,8 @@ export async function sendMail(data){
 	}
 
 	if(!mail.headers && process.env.MAIL_TEMPLATE){
-		let content = (mail.html || mail.text || '').replaceAll('\n', '<br>')
-		content = computedEmailVariables(content, variables)
+		// Variables first: a multi-line value (product list) gets its line breaks too
+		const content = computedEmailVariables(mail.html || mail.text || '', variables).replaceAll('\n', '<br>')
 
 		options.headers = {
 			'x-mj-templateid': process.env.MAIL_TEMPLATE,

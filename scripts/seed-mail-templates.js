@@ -4,6 +4,21 @@ import mongoose from 'mongoose'
 
 const docs = [
 	{
+		slug: 'request-tenant-new',
+		name: 'Loueur - Nouvelle demande de devis',
+		title: 'Nouvelle demande de devis',
+		content: 'Bonjour,\n\nUne demande de devis de *|CUSTOMER|* attend votre chiffrage : *|COUNT|* produit(s).\n\n'
+			+ '*|PRODUCTS|*\n\n'
+			+ 'Déposez votre devis (PDF) ou indiquez que vous ne pouvez pas y répondre :\n*|LINK|*'
+	},
+	{
+		slug: 'request-customer-answered',
+		name: 'Client - Devis disponible',
+		title: 'Votre devis est disponible',
+		content: 'Bonjour,\n\nTous les loueurs ont répondu à votre demande de devis.\n\n'
+			+ 'Retrouvez leurs devis ici :\n*|LINK|*'
+	},
+	{
 		slug: 'customer-email-code',
 		name: 'Client - Code de changement d\'email',
 		title: 'Confirmez votre nouvelle adresse',

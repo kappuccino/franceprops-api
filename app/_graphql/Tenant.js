@@ -7,6 +7,7 @@ const Tenant = `
   type Tenant {
     _id: String
     name: String
+    requestEmail: String
 
     createdAt: Date
     updatedAt: Date

@@ -50,6 +50,12 @@ export async function remove({token, key}, _product){
 	return $selection.toObject()
 }
 
+// The selection became a quote request
+export async function clear({token, key}){
+	const found = await find({token, key})
+	if(found) await Selection.updateOne({_id: found._id}, {items: [], updatedAt: new Date()})
+}
+
 // Login or signup: the anonymous selection joins the customer's one (merged
 // when he already has one), it is no longer reachable by its key
 export async function attach(token, key){

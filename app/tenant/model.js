@@ -6,6 +6,9 @@ import {collation} from '../db-tools.js'
 const Tenant = new mongoose.Schema({
 	name: {type: String, trim: true, required: true},
 
+	// Recipient of the quote requests of this tenant
+	requestEmail: {type: String, trim: true, lowercase: true},
+
 	createdAt: Date,
 	updatedAt: Date
 }, {

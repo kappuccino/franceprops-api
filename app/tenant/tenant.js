@@ -1,6 +1,6 @@
 import mongoose from 'mongoose'
 
-import {escapeRegex, sanitizeAggregate} from '../tools.js'
+import {escapeRegex, sanitizeAggregate, validateEmail} from '../tools.js'
 import {makeVersion} from '../version/version.js'
 
 const Tenant = mongoose.model('Tenant')
@@ -51,6 +51,7 @@ export async function create(data){
 	delete data._id
 
 	if(!data.name?.trim()) throw new Error('no name')
+	if(data.requestEmail && !validateEmail(data.requestEmail.trim())) throw new Error('invalid email')
 
 	const $tenant = new Tenant(data)
 	await $tenant.save()
@@ -63,6 +64,8 @@ export async function update(_id, data){
 
 	const $tenant = await Tenant.findOne({_id})
 	if(!$tenant) throw new Error('tenant not exists')
+
+	if(data.requestEmail && !validateEmail(data.requestEmail.trim())) throw new Error('invalid email')
 
 	await makeVersion('tenant', _id, $tenant)
 
