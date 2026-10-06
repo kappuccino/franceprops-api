@@ -16,10 +16,15 @@ export function isAdmin(context){
 	return ['admin', 'superadmin'].includes(context?.user?.role)
 }
 
-// Admins reach every tenant, the others only theirs (user._tenants)
+// Service accounts: the website (Nuxt server) and future integrations
+export function isService(context){
+	return context?.user?.role === 'service'
+}
+
+// Admins and service accounts reach every tenant, the others only theirs (user._tenants)
 export function canAccessTenant(context, _tenant){
 	if(!_tenant) return false
-	if(isAdmin(context)) return true
+	if(isAdmin(context) || isService(context)) return true
 	return (context?.user?._tenants || []).some(t => t.toString() === _tenant)
 }
 

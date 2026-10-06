@@ -7,7 +7,7 @@ const Product = mongoose.model('Product')
 
 //——— Public
 
-// Always scoped to one tenant
+// One tenant, or every tenant when _tenant is empty (rights checked by the resolver)
 export async function aggregate(params={}){
 
 	const $match = makeMatch(params)
@@ -31,14 +31,21 @@ export async function aggregate(params={}){
 }
 
 
+export async function getById(_id){
+	if(!_id) throw new Error('no _id')
+	return Product.findOne({_id}).lean()
+}
+
+
 // —— Private
 
 function makeMatch(params){
 
-	if(!params._tenant) throw new Error('no tenant')
-
 	const query = new mongoose.Query()
-	query.where('_tenant', new mongoose.Types.ObjectId(params._tenant))
+
+	if(params._tenant){
+		query.where('_tenant', new mongoose.Types.ObjectId(params._tenant))
+	}
 
 	if(params.search?.length){
 		const reg = new RegExp(escapeRegex(params.search), 'i')

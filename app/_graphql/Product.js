@@ -1,5 +1,6 @@
-import {canAccessTenant, unauthorized} from './_helper.js'
+import {canAccessTenant, isAdmin, isService, unauthorized} from './_helper.js'
 import * as productApi from '../product/product.js'
+import * as tenantApi from '../tenant/tenant.js'
 
 // --
 
@@ -7,6 +8,7 @@ const Product = `
   type Product {
     _id: String
     _tenant: String
+    tenant: Tenant
     ref: String
     title: String
 
@@ -26,7 +28,7 @@ const ProductSearch = `
 
 const ProductSearchParams = `
   input ProductSearchParams {
-    _tenant: String!
+    _tenant: String
     limit: Int
     skip: Int
     sort: JSONObject
@@ -47,18 +49,36 @@ export default {
 
 	Query: `
     searchProduct(params: ProductSearchParams!): ProductSearch
+    getProductById(_id: String!): Product
 	`,
 
 	QueryResolvers: {
+		// One tenant (dashboard), or the whole catalogue for admins and the website
 		searchProduct: (obj, {params}, context) => {
-			if(!canAccessTenant(context, params._tenant)) unauthorized()
+			const allowed = params._tenant
+				? canAccessTenant(context, params._tenant)
+				: isAdmin(context) || isService(context)
+
+			if(!allowed) unauthorized()
 			return productApi.aggregate(params)
+		},
+
+		// Same rights as the listing, checked on the tenant of the product
+		getProductById: async (obj, {_id}, context) => {
+			const product = await productApi.getById(_id)
+			if(!product) return null
+
+			if(!canAccessTenant(context, product._tenant.toString())) unauthorized()
+			return product
 		},
 	},
 
 	//--
 
 	Resolvers: {
+		Product: {
+			tenant: obj => obj._tenant ? tenantApi.getById(obj._tenant) : null,
+		}
 	},
 
 	//--
