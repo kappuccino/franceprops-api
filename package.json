@@ -1,6 +1,6 @@
 {
   "name": "french-props-api",
-  "version": "0.0.17",
+  "version": "0.0.18",
   "description": "",
   "type": "module",
   "main": "index.js",
@@ -13,7 +13,9 @@
     "test-watch": "vitest watch test/*.spec.js",
     "seed:templates": "node -r dotenv/config scripts/seed-mail-templates.js",
     "create:user": "node -r dotenv/config scripts/create-user.js",
-    "migrate:dates": "node -r dotenv/config scripts/migrate-dates-at.js"
+    "migrate:dates": "node -r dotenv/config scripts/migrate-dates-at.js",
+    "migrate:request-ids": "node -r dotenv/config scripts/migrate-request-ids.js",
+    "migrate:selections": "node -r dotenv/config scripts/migrate-selections.js"
   },
   "nodemonConfig": {
     "watch": [

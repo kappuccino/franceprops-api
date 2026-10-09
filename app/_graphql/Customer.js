@@ -111,6 +111,8 @@ export default {
 		customerSignupConfirm(email: String! code: String! data: JSONObject!): CustomerAuth @service
 		customerUpdateProfile(token: String! data: JSONObject!): CustomerMutation @service
 		customerChangePassword(token: String! current: String! password: String!): CustomerAuth @service
+		customerPasswordStart(email: String!): GenericMutation @service
+		customerPasswordConfirm(email: String! code: String! password: String!): CustomerAuth @service
 		customerEmailStart(token: String! email: String! password: String!): GenericMutation @service
 		customerEmailConfirm(token: String! code: String!): CustomerAuth @service
 	`,
@@ -160,6 +162,27 @@ export default {
 			try {
 				await customerApi.signupStart(email)
 				return {success: true}
+			} catch(err) {
+				return genFailedMutation(err, context)
+			}
+		},
+
+		// Website lost password, step 1: code sent by mail (same answer when the
+		// account does not exist)
+		customerPasswordStart: async (obj, {email}, context) => {
+			try {
+				await customerApi.passwordStart(email)
+				return {success: true}
+			} catch(err) {
+				return genFailedMutation(err, context)
+			}
+		},
+
+		// Step 2: new password, the customer is logged in
+		customerPasswordConfirm: async (obj, {email, code, password}, context) => {
+			try {
+				const res = await customerApi.passwordConfirm(email, code, password)
+				return {success: true, ...res}
 			} catch(err) {
 				return genFailedMutation(err, context)
 			}

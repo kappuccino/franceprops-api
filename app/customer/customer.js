@@ -25,7 +25,7 @@ const SIGNUP_ATTEMPTS = 5
 const SIGNUP_FIELDS = ['firstName', 'lastName', 'phone', 'company']
 
 // Fields a customer changes from "Mon compte" on the website
-const PROFILE_FIELDS = ['firstName', 'lastName', 'company', 'address', 'postal', 'city', 'country']
+const PROFILE_FIELDS = ['firstName', 'lastName', 'phone', 'company', 'address', 'postal', 'city', 'country']
 
 
 //——— Public
@@ -221,6 +221,57 @@ export async function signupConfirm(email, code, data={}){
 }
 
 
+//——— Website lost password (code sent by mail)
+
+// Always answers the same, whether the account exists or not (nor tells when
+// a code was sent too recently): nothing to learn about the accounts
+export async function passwordStart(email){
+	email = (email || '').trim().toLowerCase()
+	if(!validateEmail(email)) throw new Error('invalid email')
+
+	if(!await Customer.exists({email})) return true
+
+	const key = passwordKey(email)
+	const pending = await redis.get(key)
+	if(pending && Date.now() - pending.sent < SIGNUP_RESEND * 1000) return true
+
+	const code = newCode()
+	await redis.set(key, {code, attempts: 0, sent: Date.now()}, SIGNUP_TTL)
+
+	await sendMail({
+		tag: 'customer-password',
+		to: [email],
+		useTemplate: 'customer-password-code',
+		variables: {code}
+	})
+
+	return true
+}
+
+// Checks the code, sets the new password and closes every other session;
+// returns a session like login()
+export async function passwordConfirm(email, code, password){
+	email = (email || '').trim().toLowerCase()
+
+	const key = passwordKey(email)
+	await checkCode(key, code)
+
+	if(!isPasswordStrong(password)) throw new Error('weak password')
+
+	const $customer = await Customer.findOne({email})
+	if(!$customer) throw new Error('code expired')
+
+	await makeVersion('customer', $customer._id, $customer)
+
+	$customer.set('password', password)
+	$customer.set('tokenVersion', ($customer.tokenVersion || 0) + 1)
+	await $customer.save()
+	await redis.del(key)
+
+	return createSession($customer._id)
+}
+
+
 //——— Website email change (code sent to the new address)
 
 export async function emailStart(token, email, password){
@@ -312,6 +363,10 @@ async function checkCode(key, code){
 	}
 
 	return pending
+}
+
+function passwordKey(email){
+	return `customer:password:${email}`
 }
 
 function signupKey(email){

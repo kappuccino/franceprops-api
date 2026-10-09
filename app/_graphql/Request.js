@@ -2,6 +2,7 @@ import {canAccessTenant, genFailedMutation, getMedia, getUser, isAdmin, isServic
 import * as requestApi from '../request/request.js'
 import * as customerApi from '../customer/customer.js'
 import * as tenantApi from '../tenant/tenant.js'
+import {requestNumber} from '../request/number.js'
 
 // Quote requests. Dashboard: a manager reaches the requests and the parts of
 // his tenants only, admins reach everything. Website (@service): the customer
@@ -10,12 +11,35 @@ import * as tenantApi from '../tenant/tenant.js'
 const Request = `
   type Request {
     _id: String
+    id: Int
+    revision: Int
+    # "42", or "42.1" for a revision
+    number: String
+    name: String
+    project: String
+    company: String
+    billingAddress: String
+    delivery: Boolean
+    deliveryAddress: String
+    startAt: Date
+    endAt: Date
+    comment: String
+    termsAcceptedAt: Date
     status: String
+    _previous: String
+    previous: Request
+    _source: String
+    source: Request
     _customer: String
     customer: Customer
     parts: [RequestPart]
     count: Int
     answeredAt: Date
+    decidedAt: Date
+    # Quoted parts (the visible ones), null when none is quoted
+    totalHT: Float
+    vat: Float
+    totalTTC: Float
     createdAt: Date
     updatedAt: Date
   }
@@ -29,9 +53,14 @@ const RequestPart = `
     products: [RequestProduct]
     _media: String
     media: Media
+    amount: Float
     _answeredBy: String
     answeredBy: User
     answeredAt: Date
+    _carriedFrom: String
+    added: [RequestProduct]
+    removed: [RequestProduct]
+    changed: [RequestChange]
   }
 `
 
@@ -40,6 +69,17 @@ const RequestProduct = `
     _product: String
     ref: String
     title: String
+    quantity: Int
+  }
+`
+
+const RequestChange = `
+  type RequestChange {
+    _product: String
+    ref: String
+    title: String
+    from: Int
+    to: Int
   }
 `
 
@@ -59,6 +99,20 @@ const RequestSearchParams = `
     limit: Int
     skip: Int
     sort: JSONObject
+  }
+`
+
+const RequestInfoInput = `
+  input RequestInfoInput {
+    project: String
+    company: String
+    billingAddress: String
+    delivery: Boolean
+    deliveryAddress: String
+    startAt: String
+    endAt: String
+    comment: String
+    terms: Boolean
   }
 `
 
@@ -89,8 +143,10 @@ export default {
 		Request,
 		RequestPart,
 		RequestProduct,
+		RequestChange,
 		RequestSearch,
 		RequestSearchParams,
+		RequestInfoInput,
 
 		RequestMutation
 	],
@@ -130,9 +186,15 @@ export default {
 
 	Resolvers: {
 		Request: {
+			number: obj => requestNumber(obj),
 			customer: obj => customerApi.getById(obj._customer),
+			previous: obj => obj._previous ? requestApi.getById(obj._previous) : null,
+			source: obj => obj._source ? requestApi.getById(obj._source) : null,
 			parts: (obj, args, context) => visibleParts(obj, context),
 			count: (obj, args, context) => visibleParts(obj, context).reduce((acc, p) => acc + (p.products?.length || 0), 0),
+			totalHT: (obj, args, context) => requestApi.totals(visibleParts(obj, context))?.totalHT ?? null,
+			vat: (obj, args, context) => requestApi.totals(visibleParts(obj, context))?.vat ?? null,
+			totalTTC: (obj, args, context) => requestApi.totals(visibleParts(obj, context))?.totalTTC ?? null,
 		},
 
 		RequestPart: {
@@ -145,28 +207,63 @@ export default {
 	//--
 
 	Mutation: `
-		answerRequest(_id: String! _tenant: String! status: String! _media: String): RequestMutation
+		answerRequest(_id: String! _tenant: String! status: String! _media: String amount: Float): RequestMutation
 
-		siteRequestCreate(token: String!): RequestMutation @service
+		siteRequestCreate(token: String! info: RequestInfoInput!): RequestMutation @service
+		siteRequestRevise(token: String! _id: String!): SelectionMutation @service
+		siteRequestCopy(token: String! _id: String!): SelectionMutation @service
+		siteRequestDecide(token: String! _id: String! decision: String!): RequestMutation @service
 	`,
 
 	MutationResolvers: {
 		// quoted (with the PDF) or declined, by a manager of the tenant or an admin
-		answerRequest: async (obj, {_id, _tenant, status, _media}, context) => {
+		answerRequest: async (obj, {_id, _tenant, status, _media, amount}, context) => {
 			try {
 				if(!canAccessTenant(context, _tenant)) unauthorized()
 
-				const request = await requestApi.answer(_id, _tenant, status, _media, context.user)
+				const request = await requestApi.answer(_id, _tenant, status, _media, context.user, amount)
 				return {success: true, request}
 			} catch(err) {
 				return genFailedMutation(err, context)
 			}
 		},
 
-		// Website: the selection of the customer becomes a quote request
-		siteRequestCreate: async (obj, {token}, context) => {
+		// Website: the products of an answered request go back to the selection,
+		// the next request will revise it
+		siteRequestRevise: async (obj, {token, _id}, context) => {
 			try {
-				const request = await requestApi.createFromSelection(token)
+				const selection = await requestApi.revise(token, _id)
+				return {success: true, selection}
+			} catch(err) {
+				return genFailedMutation(err, context)
+			}
+		},
+
+		// Website: the products of a request go back to the selection, the next
+		// request will be a new one made from it
+		siteRequestCopy: async (obj, {token, _id}, context) => {
+			try {
+				const selection = await requestApi.copy(token, _id)
+				return {success: true, selection}
+			} catch(err) {
+				return genFailedMutation(err, context)
+			}
+		},
+
+		// Website: the selection of the customer becomes a quote request
+		// Website: the customer accepts or refuses the quotes (accepted | refused)
+		siteRequestDecide: async (obj, {token, _id, decision}, context) => {
+			try {
+				const request = await requestApi.decide(token, _id, decision)
+				return {success: true, request}
+			} catch(err) {
+				return genFailedMutation(err, context)
+			}
+		},
+
+		siteRequestCreate: async (obj, {token, info}, context) => {
+			try {
+				const request = await requestApi.createFromSelection(token, info)
 				return {success: true, request}
 			} catch(err) {
 				return genFailedMutation(err, context)

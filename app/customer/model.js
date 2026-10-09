@@ -22,6 +22,9 @@ const Customer = new mongoose.Schema({
 	city: {type: String, trim: true},
 	country: {type: String},
 
+	// Active selection of the website (the customer may have several)
+	_selection: {type: mongoose.Schema.ObjectId, ref: 'Selection'},
+
 	createdAt: Date,
 	updatedAt: Date
 }, {
