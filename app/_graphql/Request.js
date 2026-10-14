@@ -96,6 +96,7 @@ const RequestSearchParams = `
   input RequestSearchParams {
     _tenant: String
     status: String
+    partStatus: String
     limit: Int
     skip: Int
     sort: JSONObject

@@ -155,9 +155,15 @@ export async function getForCustomer(token, _id){
 //——— Dashboard
 
 // _tenant: requests holding a part of this tenant, every request otherwise
+// partStatus: status of that tenant's part (of any part without _tenant)
 export async function aggregate(params={}){
 	const $match = {}
-	if(params._tenant) $match['parts._tenant'] = new mongoose.Types.ObjectId(params._tenant)
+	const _tenant = params._tenant ? new mongoose.Types.ObjectId(params._tenant) : null
+
+	if(_tenant && params.partStatus) $match.parts = {$elemMatch: {_tenant, status: params.partStatus}}
+	else if(_tenant) $match['parts._tenant'] = _tenant
+	else if(params.partStatus) $match['parts.status'] = params.partStatus
+
 	if(params.status) $match.status = params.status
 
 	if(!params.sort) params.sort = {createdAt: -1}
