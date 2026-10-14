@@ -91,7 +91,7 @@ export default {
 	//--
 
 	Mutation: `
-		siteSelectionAdd(token: String key: String _product: String! quantity: Int): SelectionMutation @service
+		siteSelectionAdd(token: String key: String _product: String! quantity: Int _selection: String): SelectionMutation @service
 		siteSelectionQuantity(token: String key: String _product: String! quantity: Int!): SelectionMutation @service
 		siteSelectionRemove(token: String key: String _product: String!): SelectionMutation @service
 		siteSelectionAttach(token: String! key: String): SelectionMutation @service
@@ -104,7 +104,7 @@ export default {
 	`,
 
 	MutationResolvers: {
-		siteSelectionAdd: mutation(({token, key, _product, quantity}) => selectionApi.add({token, key}, _product, quantity ?? 1)),
+		siteSelectionAdd: mutation(({token, key, _product, quantity, _selection}) => selectionApi.add({token, key}, _product, quantity ?? 1, _selection)),
 		siteSelectionQuantity: mutation(({token, key, _product, quantity}) => selectionApi.setQuantity({token, key}, _product, quantity)),
 		siteSelectionRemove: mutation(({token, key, _product}) => selectionApi.remove({token, key}, _product)),
 		siteSelectionAttach: mutation(({token, key}) => selectionApi.attach(token, key)),
