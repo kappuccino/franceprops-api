@@ -1,6 +1,6 @@
 {
-  "name": "french-props-api",
-  "version": "0.0.20",
+  "name": "france-props-api",
+  "version": "0.0.21",
   "description": "",
   "type": "module",
   "main": "index.js",
