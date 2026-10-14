@@ -2,7 +2,7 @@ import mongoose from 'mongoose'
 
 import {collation} from '../db-tools.js'
 
-// A rental company of the French Props association
+// A rental company of the FranceProps association
 const Tenant = new mongoose.Schema({
 	name: {type: String, trim: true, required: true},
 

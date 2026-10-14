@@ -200,10 +200,10 @@ function createMailTransporter(){
 	})
 }
 
-// Brand identity used in outgoing mails, from settings (fallback: env, then "French Props")
+// Brand identity used in outgoing mails, from settings (fallback: env, then "FranceProps")
 export async function getMailBrand(){
 	const settings = await getSettings() || {}
-	const name = settings.brandName || process.env.MAIL_SENDER_NAME || 'French Props'
+	const name = settings.brandName || process.env.MAIL_SENDER_NAME || 'FranceProps'
 	const prefix = settings.mailSubjectPrefix || `[${name}]`
 
 	return {name, prefix}

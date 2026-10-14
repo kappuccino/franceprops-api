@@ -4,7 +4,7 @@ import {nanoid} from 'nanoid'
 import {collation} from '../db-tools.js'
 import {hashPassword} from '../password.js'
 
-// Website account, the one making the requests. Shared by the whole French Props
+// Website account, the one making the requests. Shared by the whole FranceProps
 // association (not tied to a tenant), kept apart from the dashboard users.
 const Customer = new mongoose.Schema({
 	email: {type: String, trim: true, lowercase: true, required: true, unique: true},

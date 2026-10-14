@@ -22,7 +22,7 @@ const origin = process.env.DASH_URL
 
 async function brandName(){
 	const settings = await settingsApi.getDefault()
-	return settings?.brandName || 'French Props'
+	return settings?.brandName || 'FranceProps'
 }
 
 
