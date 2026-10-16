@@ -18,6 +18,10 @@ const Selection = new mongoose.Schema({
 	name: {type: String, trim: true},
 	items: [SelectionItem],
 
+	// Rental period, the next request gets it
+	startAt: Date,
+	endAt: Date,
+
 	// Answered request being revised: the next request revises it
 	_request: {type: mongoose.Schema.ObjectId, ref: 'Request'},
 	// Request the selection was copied from: the next request is a new one

@@ -26,7 +26,7 @@ export default {
 	//--
 
 	Query: `
-		getToken(token:String!): Token @admin
+		getToken(token:String!): Token @admin @service
 	`,
 
 	QueryResolvers: {

@@ -213,11 +213,20 @@ export async function signupConfirm(email, code, data={}){
 
 	if(!isPasswordStrong(data.password)) throw new Error('weak password')
 
+	const phone = (data.phone || '').toString().trim()
+	if(!isPhoneValid(phone)) throw new Error('invalid phone')
+
 	const fields = Object.fromEntries(Object.entries(data).filter(([k]) => SIGNUP_FIELDS.includes(k)))
-	await create({...fields, email, password: data.password})
+	await create({...fields, phone, email, password: data.password})
 	await redis.del(key)
 
 	return login(email, data.password)
+}
+
+
+// Digits only once the usual separators are removed, a leading + allowed
+export function isPhoneValid(phone){
+	return /^\+?\d{9,15}$/.test((phone || '').replace(/[\s.\-()]/g, ''))
 }
 
 

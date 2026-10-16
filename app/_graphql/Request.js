@@ -110,8 +110,6 @@ const RequestInfoInput = `
     billingAddress: String
     delivery: Boolean
     deliveryAddress: String
-    startAt: String
-    endAt: String
     comment: String
     terms: Boolean
   }

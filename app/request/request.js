@@ -38,11 +38,12 @@ export async function createFromSelection(token, info={}){
 	const customer = await customerApi.fromToken(token)
 	if(!customer) throw new Error('invalid session')
 
-	const details = checkInfo(info)
-
 	const selection = await selectionApi.find({token})
 	const items = await selectionApi.existingItems(selection?.items)
 	if(!items.length) throw new Error('empty selection')
+
+	// The rental period is the one of the selection
+	const details = checkInfo({...info, startAt: selection.startAt, endAt: selection.endAt})
 
 	const quantities = new Map(items.map(i => [i._product.toString(), i.quantity || 1]))
 	const products = await Product.find({_id: {$in: items.map(i => i._product)}}).lean()

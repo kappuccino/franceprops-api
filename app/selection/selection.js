@@ -26,6 +26,12 @@ export async function find({token, key}){
 	return null
 }
 
+// Any selection, for the PDF generator (never exposed to the website)
+export async function getById(_id){
+	if(!mongoose.isValidObjectId(_id)) return null
+	return Selection.findOne({_id}).lean()
+}
+
 // Every selection of the customer, oldest first
 export async function list(token){
 	const customer = await requireCustomer(token)
@@ -129,6 +135,24 @@ export async function remove({token, key}, _product){
 	return $selection.toObject()
 }
 
+// Rental period of the active selection (created when needed), both empty to
+// clear it
+export async function setDates({token, key}, startAt, endAt){
+	const start = parseDate(startAt)
+	const end = parseDate(endAt)
+
+	if(start === false || end === false || Boolean(start) !== Boolean(end) || end < start) throw new Error('invalid dates')
+
+	const $selection = await findOrCreate({token, key})
+	$selection.set('startAt', start || undefined)
+	$selection.set('endAt', end || undefined)
+
+	touch($selection)
+	await $selection.save()
+
+	return $selection.toObject()
+}
+
 // The selection became a quote request: it is removed, the next add creates a
 // new one when the customer has none left
 export async function consume(token, _id){
@@ -159,6 +183,8 @@ export async function fromRequest(token, request, mode='revise'){
 		items: request.parts
 			.flatMap(part => part.products)
 			.map(p => ({_product: p._product, quantity: p.quantity || 1, addedAt: new Date()})),
+		startAt: request.startAt,
+		endAt: request.endAt,
 		_request: mode === 'revise' ? request._id : undefined,
 		_source: mode === 'copy' ? request._id : undefined
 	})
@@ -205,6 +231,11 @@ export async function attach(token, key){
 	const known = new Set($own.items.map(i => i._product.toString()))
 	for(const item of anonymous.items){
 		if(!known.has(item._product.toString())) $own.items.push(item)
+	}
+
+	if(!$own.startAt && anonymous.startAt){
+		$own.startAt = anonymous.startAt
+		$own.endAt = anonymous.endAt
 	}
 
 	await $own.save()
@@ -283,6 +314,14 @@ function checkQuantity(quantity){
 	if(!Number.isInteger(n) || n < 1 || n > 9999) throw new Error('invalid quantity')
 
 	return n
+}
+
+// null when empty, false when not a date
+function parseDate(value){
+	if(!value) return null
+
+	const date = new Date(value)
+	return isNaN(date) ? false : date
 }
 
 // Anonymous selections live 30 days after their last change
