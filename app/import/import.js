@@ -13,7 +13,7 @@ const Tenant = mongoose.model('Tenant')
 const PROCESSED = {$add: ['$created', '$updated', '$unchanged', '$failed', '$gone']}
 
 const ACTIVE = ['listing', 'running']
-const COUNTS = ['waiting', 'active', 'delayed', 'completed', 'failed'] // a paused queue keeps its jobs in waiting
+const COUNTS = ['waiting', 'active', 'delayed', 'failed'] // a paused queue keeps its jobs in waiting
 
 
 //——— Public
@@ -94,13 +94,29 @@ export async function getFailedJobs(source, {limit=50, skip=0}={}){
 	}
 }
 
-// The jobs in progress end, no new one starts (the listing keeps adding)
+// The jobs in progress end, no new one starts. Not while listing: the list
+// job would go on adding the product jobs, stop() is the way to end it.
 export async function pause(source){
+	if(await ImportRun.exists({source, status: 'listing'})) throw new Error('import listing')
+
 	await getQueue(source).pause()
 }
 
 export async function resume(source){
 	await getQueue(source).resume()
+}
+
+// The run in progress ends: the listing stops at its next page, the waiting
+// product jobs are removed, the active ones end. Nothing is marked as gone,
+// the failed jobs stay (unlike reset).
+export async function stop(source){
+	const res = await ImportRun.updateMany({source, status: {$in: ACTIVE}}, {
+		$set: {status: 'stopped', finishedAt: new Date()}
+	})
+
+	if(!res.modifiedCount) throw new Error('no import running')
+
+	await getQueue(source).drain(true)
 }
 
 // The queue is emptied completely (waiting, active, done, failed jobs, and its

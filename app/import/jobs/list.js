@@ -21,7 +21,7 @@ export async function handle(job, source){
 	let listed = 0
 
 	for await (const page of adapter.list()){
-		// Reset (or another end) in the meantime: the run stops here
+		// Stopped or reset in the meantime: the run ends here
 		if(!await ImportRun.exists({_id: _run, status: 'listing'})) return {cancelled: true, listed}
 
 		await addPage(source, _run, tenant._id, page)

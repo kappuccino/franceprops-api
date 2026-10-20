@@ -40,7 +40,6 @@ const ImportCounts = `
     waiting: Int
     active: Int
     delayed: Int
-    completed: Int
     failed: Int
   }
 `
@@ -166,6 +165,7 @@ export default {
 		importStart(source: String!): ImportMutation @admin
 		importPause(source: String!): ImportMutation @admin
 		importResume(source: String!): ImportMutation @admin
+		importStop(source: String!): ImportMutation @admin
 		importReset(source: String!): ImportMutation @admin
 		importRetry(source: String! jobId: String): ImportMutation @admin
 	`,
@@ -174,6 +174,7 @@ export default {
 		importStart: (obj, {source}, context) => mutation(context, async () => ({run: await importApi.start(source)})),
 		importPause: (obj, {source}, context) => mutation(context, () => importApi.pause(source)),
 		importResume: (obj, {source}, context) => mutation(context, () => importApi.resume(source)),
+		importStop: (obj, {source}, context) => mutation(context, () => importApi.stop(source)),
 		importReset: (obj, {source}, context) => mutation(context, () => importApi.reset(source)),
 		importRetry: (obj, {source, jobId}, context) => mutation(context, async () => ({retried: await importApi.retry(source, jobId)})),
 	},

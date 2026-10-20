@@ -10,7 +10,7 @@ export const connection = redis
 export const defaultJobOptions = {
 	attempts: 3,
 	backoff: {type: 'exponential', delay: 5000},
-	removeOnComplete: {age: 24 * 3600, count: 1000},
+	removeOnComplete: true, // ImportRun and ImportItem keep what matters
 	removeOnFail: {age: 7 * 24 * 3600} // errors stay visible in the dashboard
 }
 

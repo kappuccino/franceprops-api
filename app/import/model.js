@@ -44,7 +44,7 @@ ImportItem.pre('save', function(next){
 // which Redis doesn't keep
 const ImportRun = new mongoose.Schema({
 	source: {type: String, enum: sourceKeys, required: true, index: true},
-	status: {type: String, enum: ['listing', 'running', 'done', 'failed', 'reset'], default: 'listing', index: true},
+	status: {type: String, enum: ['listing', 'running', 'done', 'failed', 'stopped', 'reset'], default: 'listing', index: true},
 
 	startedAt: Date,
 	listedAt: Date, // end of the listing

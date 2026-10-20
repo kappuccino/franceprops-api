@@ -5,12 +5,17 @@ import {getAdapter} from '../sources/index.js'
 import {count, removeProduct} from '../import.js'
 
 const ImportItem = mongoose.model('ImportItem')
+const ImportRun = mongoose.model('ImportRun')
 const Product = mongoose.model('Product')
 
 // "product" job: the raw product goes to its ImportItem, its normalized
 // fields to the Product of the catalogue (created on the first import)
 export async function handle(job, source){
 	const {_run, externalId, hash} = job.data
+
+	// Run stopped or reset: a job added by its last listed page after the
+	// drain does nothing (the item stays pending until the next run)
+	if(await ImportRun.exists({_id: _run, status: {$in: ['stopped', 'reset']}})) return 'cancelled'
 
 	const item = await ImportItem.findOne({source, externalId})
 	if(!item) throw new UnrecoverableError('import item not found')
