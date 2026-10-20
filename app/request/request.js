@@ -309,8 +309,8 @@ async function tenantEmail(_tenant, request){
 	return tenant?.requestEmail
 }
 
-const productLines = products => products.map(p => `- ${p.ref} — ${p.title || ''} × ${p.quantity || 1}`).join('\n')
-const changeLines = changes => changes.map(c => `- ${c.ref} — ${c.title || ''} : ${c.from} → ${c.to}`).join('\n')
+const productLines = products => products.map(p => `- ${p.ref || 'Sans réf.'} — ${p.title || ''} × ${p.quantity || 1}`).join('\n')
+const changeLines = changes => changes.map(c => `- ${c.ref || 'Sans réf.'} — ${c.title || ''} : ${c.from} → ${c.to}`).join('\n')
 
 // Each tenant asked for a quote gets a mail at the address of its record
 // (requestEmail) with its products, and what changed when the request revises

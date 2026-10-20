@@ -1,6 +1,8 @@
 // Small GraphQL client shared by the sources: bearer token, timeout, and an
-// error thrown for any failure (it shows with the job errors in the dashboard)
-export function createClient({url, token, timeout=30000}){
+// error thrown for any failure (it shows with the job errors in the dashboard).
+// tolerate: fields whose resolver may fail at the source without failing the
+// query, they come back null (e.g. a category deleted at the source).
+export function createClient({url, token, timeout=30000, tolerate=[]}){
 	if(!url || !token) throw new Error('source not configured')
 
 	return async function query(query, variables={}){
@@ -21,7 +23,8 @@ export function createClient({url, token, timeout=30000}){
 		// Apollo answers its errors in JSON, an HTTP 400 included
 		const json = await res.json().catch(() => null)
 
-		if(json?.errors?.length) throw new Error(json.errors.map(err => err.message).join(', '))
+		const errors = (json?.errors || []).filter(err => !err.path?.some(field => tolerate.includes(field)))
+		if(errors.length) throw new Error(errors.map(err => err.message).join(', '))
 		if(!res.ok || !json) throw new Error(`${url} → HTTP ${res.status}`)
 
 		return json.data

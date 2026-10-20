@@ -5,7 +5,7 @@ import {collation} from '../db-tools.js'
 // Catalogue item, owned by a single tenant (imported from its source)
 const Product = new mongoose.Schema({
 	_tenant: {type: mongoose.Schema.ObjectId, ref: 'Tenant', required: true, index: true},
-	ref: {type: String, trim: true, required: true},
+	ref: {type: String, trim: true}, // a label only: some sources reuse it or leave it empty
 	title: {type: String, trim: true},
 
 	// Imported product: its source and its id there (see app/import)
@@ -24,8 +24,9 @@ const Product = new mongoose.Schema({
 	collation
 })
 
-// A reference is unique within its tenant only
-Product.index({_tenant: 1, ref: 1}, {unique: true})
+// Not unique: an imported product is identified by its source and its id there
+// (ImportItem). Former unique index: scripts/migrate-product-ref-index.js
+Product.index({_tenant: 1, ref: 1})
 
 Product.pre('save', function(next){
 	this.updatedAt = new Date()

@@ -2,7 +2,7 @@ import {createClient} from '../graphql-client.js'
 
 // XXO: the /graphql_web endpoint of their api, reserved to the "service"
 // accounts (10 years token minted on their dashboard, /token page).
-// XXO_API_URL is the api root, without /graphql_web.
+// XXO_API_URL is the GraphQL endpoint (…/graphql_web).
 //
 // Only the published products of type "product" (not the associated refs,
 // "element") with a rental price are imported. XXO deletes its products for
@@ -67,7 +67,7 @@ function isPublished(product){
 
 function client(){
 	return createClient({
-		url: process.env.XXO_API_URL && `${process.env.XXO_API_URL.replace(/\/$/, '')}/graphql_web`,
+		url: process.env.XXO_API_URL,
 		token: process.env.XXO_API_TOKEN
 	})
 }

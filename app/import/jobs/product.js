@@ -29,7 +29,6 @@ export async function handle(job, source){
 	}
 
 	const fields = adapter.normalize(raw)
-	if(!fields?.ref) throw new UnrecoverableError('no ref')
 
 	let $product = item._product && await Product.findOne({_id: item._product})
 	const isNew = !$product
@@ -39,12 +38,7 @@ export async function handle(job, source){
 	// Back at the source: visible again
 	$product.set({...fields, _tenant: item._tenant, removedAt: undefined})
 
-	try {
-		await $product.save()
-	} catch(err){
-		if(err.code === 11000) throw new UnrecoverableError(`ref "${fields.ref}" already used by another product of the tenant`)
-		throw err
-	}
+	await $product.save()
 
 	item.set({raw, hash, status: 'imported', error: undefined, importedAt: new Date(), _product: $product._id})
 	item.markModified('raw')

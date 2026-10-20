@@ -1,6 +1,6 @@
 {
   "name": "franceprops-api",
-  "version": "0.0.25",
+  "version": "0.0.26",
   "description": "",
   "type": "module",
   "main": "index.js",
@@ -19,7 +19,8 @@
     "drop:mock-products": "node -r dotenv/config scripts/drop-mock-products.js",
     "migrate:dates": "node -r dotenv/config scripts/migrate-dates-at.js",
     "migrate:request-ids": "node -r dotenv/config scripts/migrate-request-ids.js",
-    "migrate:selections": "node -r dotenv/config scripts/migrate-selections.js"
+    "migrate:selections": "node -r dotenv/config scripts/migrate-selections.js",
+    "migrate:product-ref": "node -r dotenv/config scripts/migrate-product-ref-index.js"
   },
   "nodemonConfig": {
     "watch": [

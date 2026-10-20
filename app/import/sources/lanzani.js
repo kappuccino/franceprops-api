@@ -3,7 +3,7 @@ import {contentHash} from '../hash.js'
 
 // Lanzani: the main /graphql endpoint of their api (no service endpoint there),
 // with a dedicated user and a long lived token (getUserFromJWT { jwt(expiresIn) }).
-// LANZANI_API_URL is the api root, without /graphql.
+// LANZANI_API_URL is the GraphQL endpoint (…/graphql).
 //
 // Same selection as their website (webContext): products visible on the web,
 // with a picture. Lanzani deletes its products for good: a product missing
@@ -64,10 +64,15 @@ function isPublished(product){
 	return !!product.webVisible && !!product._picture
 }
 
+// Their taxonomy resolvers fail on a term deleted since (categoriesPath…): the
+// product is imported anyway, without these terms
+const TAXONOMIES = ['categoriesPath', 'periodsTerms', 'stylesTerms', 'materialsTerms', 'colorsTerms', 'keywordsTerms', 'universTerms']
+
 function client(){
 	return createClient({
-		url: process.env.LANZANI_API_URL && `${process.env.LANZANI_API_URL.replace(/\/$/, '')}/graphql`,
-		token: process.env.LANZANI_API_TOKEN
+		url: process.env.LANZANI_API_URL,
+		token: process.env.LANZANI_API_TOKEN,
+		tolerate: TAXONOMIES
 	})
 }
 
@@ -104,7 +109,7 @@ export async function fetchProduct(externalId){
 // Catalogue fields taken from the raw product (more with the uniformisation)
 export function normalize(raw){
 	return {
-		ref: raw.code,
+		ref: raw.code || null, // reused or empty at some sources: a label only
 		title: raw.titleFR || raw.titleERP || raw.code
 	}
 }
