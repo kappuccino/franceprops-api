@@ -209,14 +209,15 @@ export async function getMailBrand(){
 	return {name, prefix}
 }
 
-// data.tag (or the template slug) tells where the mail comes from in the mail-queue
+// data.tag (or the template slug) tells where the mail comes from in the mail-queue,
+// data._tenants the tenants concerned: their managers see the mail in the dashboard
 export async function sendMail(data){
 
 	const brand = await getMailBrand()
 	const mailID = randomUUID()
 
 	// Only used to build the mail, never handed over to nodemailer
-	const {tag, useTemplate, variables, ...mail} = data
+	const {tag, _tenants, useTemplate, variables, ...mail} = data
 
 	const options = {
 		from: `${brand.name} <${process.env.MAIL_FROM}>`,
@@ -268,7 +269,7 @@ export async function sendMail(data){
 	// Every mail is kept (sent or not) so it can be resent, a failure here must not mask the SMTP result
 	async function queueMail(status, error){
 		try {
-			await createMailQueue({id: mailID, tag: tag || useTemplate, status, error, raw: options})
+			await createMailQueue({id: mailID, tag: tag || useTemplate, _tenants, status, error, raw: options})
 		} catch(err){
 			console.log('[sendMail] mail-queue failed', err.message)
 		}

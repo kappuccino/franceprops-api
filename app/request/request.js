@@ -331,6 +331,7 @@ async function notifyTenants(request, customer){
 
 		await sendMail({
 			tag: 'request-tenant',
+			_tenants: [part._tenant],
 			to: [to],
 			useTemplate: revised ? 'request-tenant-revised' : 'request-tenant-new',
 			variables: {
@@ -359,6 +360,7 @@ async function notifyRemovedTenants(previous, request, customer){
 
 		await sendMail({
 			tag: 'request-tenant',
+			_tenants: [part._tenant],
 			to: [to],
 			useTemplate: 'request-tenant-cancelled',
 			variables: {
@@ -382,6 +384,7 @@ async function notifyDecision(request, customer){
 
 		await sendMail({
 			tag: 'request-tenant',
+			_tenants: [part._tenant],
 			to: [to],
 			useTemplate: request.status === 'accepted' ? 'request-tenant-accepted' : 'request-tenant-refused',
 			variables: {
@@ -401,6 +404,7 @@ async function notifyCustomer(request){
 
 	await sendMail({
 		tag: 'request-customer',
+		_tenants: request.parts.map(p => p._tenant),
 		to: [customer.email],
 		useTemplate: 'request-customer-answered',
 		variables: {

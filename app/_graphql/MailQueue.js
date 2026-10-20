@@ -1,5 +1,12 @@
-import {genFailedMutation} from './_helper.js'
+import {canAccessTenant, genFailedMutation, isAdmin, unauthorized} from './_helper.js'
 import * as mailQueueApi from '../mail-queue/mail-queue.js'
+import * as tenantApi from '../tenant/tenant.js'
+
+// Admins see every mail, a manager the mails of a tenant he works on (_tenant)
+function checkTenant(context, _tenant){
+	const allowed = _tenant ? canAccessTenant(context, _tenant) : isAdmin(context)
+	if(!allowed) unauthorized()
+}
 
 // --
 
@@ -9,6 +16,8 @@ const MailQueue = `
     createdAt: Date
     id: String
     tag: String
+    _tenants: [String]
+    tenants: [Tenant]
     status: String
     error: String
     raw: JSONObject
@@ -53,6 +62,7 @@ const MailQueueAggregateParams = `
     errors: Boolean
     tag: [String]
     search: String
+    _tenant: String
   }
 `
 
@@ -70,20 +80,40 @@ export default {
 	//--
 
 	Query: `
-    aggregateMailQueue(params: MailQueueAggregateParams): MailQueueAggregate @admin
-    getMailQueueTags: [String] @admin
-    getMailQueueAttachment(_id: String! index: Int!): MailQueueAttachment @admin
+    aggregateMailQueue(params: MailQueueAggregateParams): MailQueueAggregate
+    getMailQueueTags(_tenant: String): [String]
+    getMailQueueAttachment(_id: String! index: Int!): MailQueueAttachment
 	`,
 
 	QueryResolvers: {
-		aggregateMailQueue: (obj, {params={}}) => mailQueueApi.aggregate(params),
-		getMailQueueTags: () => mailQueueApi.getTags(),
-		getMailQueueAttachment: (obj, {_id, index}) => mailQueueApi.getAttachment(_id, index)
+		aggregateMailQueue: (obj, {params={}}, context) => {
+			checkTenant(context, params._tenant)
+			return mailQueueApi.aggregate(params)
+		},
+
+		getMailQueueTags: (obj, {_tenant}, context) => {
+			checkTenant(context, _tenant)
+			return mailQueueApi.getTags({_tenant})
+		},
+
+		// A manager reaches the attachments of the mails of his tenants only
+		getMailQueueAttachment: async (obj, {_id, index}, context) => {
+			const mail = await mailQueueApi.getById(_id)
+			if(!mail) throw new Error('mail not found')
+
+			const allowed = isAdmin(context) || (mail._tenants || []).some(t => canAccessTenant(context, t.toString()))
+			if(!allowed) unauthorized()
+
+			return mailQueueApi.getAttachment(_id, index)
+		}
 	},
 
 	//--
 
 	Resolvers: {
+		MailQueue: {
+			tenants: obj => tenantApi.getByIds(obj._tenants),
+		}
 	},
 
 	//--

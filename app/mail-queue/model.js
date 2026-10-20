@@ -17,6 +17,7 @@ const MailQueue = new mongoose.Schema({
 	createdAt: {type: Date, expires: RETENTION},
 	id: {type: String, index: true}, // x-mj-eventpayload, matches the Mailjet webhook events
 	tag: {type: String, index: true}, // where the mail comes from (template slug, sendMail tag)
+	_tenants: {type: [mongoose.Schema.ObjectId], ref: 'Tenant', index: true}, // tenants concerned (request mails), seen by their managers
 	status: {type: String, index: true}, // sent | held (MAIL_FAKE) | error (SMTP) | bounce | blocked | spam (Mailjet)
 	error: String,
 	raw: mongoose.Schema.Types.Mixed,

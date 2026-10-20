@@ -39,8 +39,9 @@ export async function aggregate(params={}){
 	}
 }
 
-export async function getTags(){
-	const tags = await MailQueue.distinct('tag')
+// params._tenant: the tags of the mails of this tenant only
+export async function getTags(params={}){
+	const tags = await MailQueue.distinct('tag', makeMatch({_tenant: params._tenant}))
 	return tags.filter(Boolean).sort()
 }
 
@@ -89,7 +90,7 @@ export async function resend(_id){
 
 	let success = false
 	try {
-		await sendMail({...restoreRaw(mail.raw), tag: mail.tag})
+		await sendMail({...restoreRaw(mail.raw), tag: mail.tag, _tenants: mail._tenants})
 		success = true
 	} catch(err){
 		console.log('[mail-queue] resend failed', err.message)
@@ -154,6 +155,11 @@ function makeMatch(params){
 
 	if(params.tag?.length){
 		query.where('tag', {$in: [params.tag].flat()})
+	}
+
+	// Cast by hand: the conditions go to an aggregate
+	if(params._tenant){
+		query.where('_tenants', new mongoose.Types.ObjectId(params._tenant))
 	}
 
 	if(params.search?.length){
