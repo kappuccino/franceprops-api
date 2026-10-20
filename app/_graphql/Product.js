@@ -12,6 +12,10 @@ const Product = `
     ref: String
     title: String
 
+    source: String
+    externalId: String
+    removedAt: Date
+
     createdAt: Date
     updatedAt: Date
   }
@@ -60,7 +64,9 @@ export default {
 				: isAdmin(context) || isService(context)
 
 			if(!allowed) unauthorized()
-			return productApi.aggregate(params)
+
+			// The website doesn't show the products gone from their source
+			return productApi.aggregate({...params, hideRemoved: isService(context)})
 		},
 
 		// Same rights as the listing, checked on the tenant of the product
@@ -69,6 +75,8 @@ export default {
 			if(!product) return null
 
 			if(!canAccessTenant(context, product._tenant.toString())) unauthorized()
+			if(product.removedAt && isService(context)) return null
+
 			return product
 		},
 	},

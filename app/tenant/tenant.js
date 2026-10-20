@@ -2,6 +2,7 @@ import mongoose from 'mongoose'
 
 import {escapeRegex, sanitizeAggregate, validateEmail} from '../tools.js'
 import {makeVersion} from '../version/version.js'
+import {isSource} from '../import/sources/index.js'
 
 const Tenant = mongoose.model('Tenant')
 const User = mongoose.model('User')
@@ -41,6 +42,11 @@ export async function getByIds(_ids){
 	return Tenant.find({_id: {$in: _ids}}).sort({name: 1}).lean()
 }
 
+export async function getByImportSource(key){
+	if(!key) return null
+	return Tenant.findOne({importSource: key}).lean()
+}
+
 // Tenants a user may work on: all of them for an admin, his own for a manager
 export async function getAllowed(user){
 	if(['admin', 'superadmin'].includes(user?.role)) return Tenant.find().sort({name: 1}).lean()
@@ -52,6 +58,7 @@ export async function create(data){
 
 	if(!data.name?.trim()) throw new Error('no name')
 	if(data.requestEmail && !validateEmail(data.requestEmail.trim())) throw new Error('invalid email')
+	await checkImportSource(data)
 
 	const $tenant = new Tenant(data)
 	await $tenant.save()
@@ -66,6 +73,7 @@ export async function update(_id, data){
 	if(!$tenant) throw new Error('tenant not exists')
 
 	if(data.requestEmail && !validateEmail(data.requestEmail.trim())) throw new Error('invalid email')
+	await checkImportSource(data, _id)
 
 	await makeVersion('tenant', _id, $tenant)
 
@@ -96,6 +104,21 @@ export async function remove(_id){
 
 
 // —— Private
+
+// A known source, not taken by another tenant. Empty → no source (unset)
+async function checkImportSource(data, _id){
+	if(!('importSource' in data)) return
+
+	if(!data.importSource){
+		data.importSource = undefined
+		return
+	}
+
+	if(!isSource(data.importSource)) throw new Error('unknown import source')
+
+	const taken = await Tenant.exists({importSource: data.importSource, ...(_id ? {_id: {$ne: _id}} : {})})
+	if(taken) throw new Error('import source already used')
+}
 
 function makeMatch(params){
 

@@ -8,6 +8,7 @@ const Tenant = `
     _id: String
     name: String
     requestEmail: String
+    importSource: String
 
     createdAt: Date
     updatedAt: Date

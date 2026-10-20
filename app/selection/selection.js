@@ -83,7 +83,8 @@ export async function removeSelection(token, _id){
 // _selection: basket chosen by the customer, which becomes the active one;
 // the active selection otherwise
 export async function add({token, key}, _product, quantity=1, _selection){
-	if(!await Product.exists({_id: _product})) throw new Error('product not found')
+	const product = await Product.findOne({_id: _product}, {removedAt: 1}).lean()
+	if(!product) throw new Error('product not found')
 	quantity = checkQuantity(quantity)
 
 	let $selection
@@ -96,6 +97,10 @@ export async function add({token, key}, _product, quantity=1, _selection){
 	}
 
 	const item = $selection.items.find(i => i._product.toString() === _product)
+
+	// Gone from its source: stays in the selections, can't be added anymore
+	if(!item && product.removedAt) throw new Error('product not found')
+
 	if(item) item.quantity = quantity
 	else $selection.items.push({_product, quantity, addedAt: new Date()})
 

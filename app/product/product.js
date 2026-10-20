@@ -47,6 +47,10 @@ function makeMatch(params){
 		query.where('_tenant', new mongoose.Types.ObjectId(params._tenant))
 	}
 
+	if(params.hideRemoved){
+		query.where('removedAt', null)
+	}
+
 	if(params.search?.length){
 		const reg = new RegExp(escapeRegex(params.search), 'i')
 		query.or([

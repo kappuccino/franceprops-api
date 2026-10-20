@@ -2,11 +2,20 @@ import mongoose from 'mongoose'
 
 import {collation} from '../db-tools.js'
 
-// Catalogue item, owned by a single tenant (pushed or imported by the tenant)
+// Catalogue item, owned by a single tenant (imported from its source)
 const Product = new mongoose.Schema({
 	_tenant: {type: mongoose.Schema.ObjectId, ref: 'Tenant', required: true, index: true},
 	ref: {type: String, trim: true, required: true},
 	title: {type: String, trim: true},
+
+	// Imported product: its source and its id there (see app/import)
+	source: {type: String, index: true},
+	externalId: String,
+	_importItem: {type: mongoose.Schema.ObjectId, ref: 'ImportItem', index: true},
+
+	// Gone from its source: hidden on the site, still valid in the requests and
+	// the selections. Cleared if the product comes back.
+	removedAt: {type: Date, index: true},
 
 	createdAt: Date,
 	updatedAt: Date

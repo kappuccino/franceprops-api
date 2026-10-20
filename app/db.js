@@ -14,6 +14,7 @@ import './product/model.js'
 import './taxonomy/model.js'
 import './selection/model.js'
 import './request/model.js'
+import './import/model.js'
 
 mongoose.set('strictQuery', true)
 
