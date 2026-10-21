@@ -14,22 +14,28 @@ export const defaultJobOptions = {
 	removeOnFail: {age: 7 * 24 * 3600} // errors stay visible in the dashboard
 }
 
-export function queueName(source){
-	return `import-${source}`
+// Two queues per source: the catalogue (list and product jobs), and its
+// pictures, downloaded apart (a slow picture server never holds a run back)
+export const KINDS = ['catalogue', 'pictures']
+
+export function queueName(source, kind='catalogue'){
+	return kind === 'pictures' ? `import-${source}-pictures` : `import-${source}`
 }
 
 const queues = new Map()
 
 // Queue of a source, created once: the api adds the jobs and drives it (pause,
 // reset, counts), the worker processes it
-export function getQueue(source){
+export function getQueue(source, kind='catalogue'){
 	if(!isSource(source)) throw new Error('unknown source')
+	if(!KINDS.includes(kind)) throw new Error('unknown queue')
 
-	if(!queues.has(source)){
-		queues.set(source, new Queue(queueName(source), {connection, defaultJobOptions}))
+	const name = queueName(source, kind)
+	if(!queues.has(name)){
+		queues.set(name, new Queue(name, {connection, defaultJobOptions}))
 	}
 
-	return queues.get(source)
+	return queues.get(name)
 }
 
 export async function closeQueues(){

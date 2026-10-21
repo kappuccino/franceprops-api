@@ -10,9 +10,10 @@ const ImportRun = mongoose.model('ImportRun')
 const Tenant = mongoose.model('Tenant')
 
 // "list" job: the whole catalogue of the source, page by page. Every product
-// gets its ImportItem; a product job is added unless it's unchanged.
+// gets its ImportItem; a product job is added unless it's unchanged (always
+// with a full run).
 export async function handle(job, source){
-	const {_run} = job.data
+	const {_run, full} = job.data
 
 	const tenant = await Tenant.findOne({importSource: source}, {_id: 1}).lean()
 	if(!tenant) throw new UnrecoverableError('no tenant for this source')
@@ -24,7 +25,7 @@ export async function handle(job, source){
 		// Stopped or reset in the meantime: the run ends here
 		if(!await ImportRun.exists({_id: _run, status: 'listing'})) return {cancelled: true, listed}
 
-		await addPage(source, _run, tenant._id, page)
+		await addPage(source, _run, tenant._id, page, full)
 		listed += page.length
 
 		await job.updateProgress({listed})
@@ -50,7 +51,7 @@ export async function failed(job, source, err){
 
 // —— Private
 
-async function addPage(source, _run, _tenant, page){
+async function addPage(source, _run, _tenant, page, full){
 	const now = new Date()
 
 	const existing = await ImportItem.find({source, externalId: {$in: page.map(p => p.externalId)}}, {externalId: 1, hash: 1, status: 1, _product: 1}).lean()
@@ -58,6 +59,8 @@ async function addPage(source, _run, _tenant, page){
 
 	// Same fingerprint as the last successful import
 	const isUnchanged = ({externalId, hash}) => {
+		if(full) return false
+
 		const item = items.get(externalId)
 		return !!hash && item?.hash === hash && !!item._product && ['imported', 'unchanged'].includes(item.status)
 	}

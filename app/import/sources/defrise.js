@@ -1,4 +1,6 @@
 import {createClient} from '../graphql-client.js'
+import {contentHash} from '../hash.js'
+import {pictures, pictureUrls} from './pictures.js'
 
 // Defrise: the main /graphql endpoint of their api (no service endpoint there),
 // with a dedicated user and a long lived token (getUserFromJWT { jwt(expiresIn) }).
@@ -20,6 +22,8 @@ const LIST = `query($params:ProductAggregateParams){
 			stock
 			_picture
 			updated
+			picture{url}
+			gallery{order media{url}}
 		}
 	}
 }`
@@ -86,7 +90,8 @@ function client(){
 }
 
 // Products of their website, one page at a time: [{externalId, hash, ref}]. The
-// hash is the last save at Defrise (refreshed by every edit of the product).
+// hash is the last save at Defrise (refreshed by every edit of the product) and
+// the urls of its pictures (a cut-out keeps the product date).
 export async function* list(){
 	const query = client()
 
@@ -98,7 +103,7 @@ export async function* list(){
 		const data = aggregateProduct?.data || []
 		yield data
 			.filter(isPublished)
-			.map(product => ({externalId: product._id, hash: product.updated, ref: product.code}))
+			.map(product => ({externalId: product._id, hash: contentHash([product.updated, pictureUrls(product.picture, product.gallery)]), ref: product.code}))
 
 		if(data.length < PAGE) break
 	}
@@ -120,6 +125,7 @@ export async function fetchProduct(externalId){
 export function normalize(raw){
 	return {
 		ref: raw.code || null, // reused or empty at some sources: a label only
-		title: raw.titleFR || raw.shortTitleFR || raw.titleERP || raw.code
+		title: raw.titleFR || raw.shortTitleFR || raw.titleERP || raw.code,
+		...pictures(raw.picture, raw.gallery)
 	}
 }

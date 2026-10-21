@@ -90,6 +90,7 @@ console.log('[•] Starting server')
 
 Promise.all([
 	import('./media/route.js'),
+	import('./picture/route.js'),
 	import('./broadcast/route.js'),
 	import('./mailjet/route.js'),
 ])

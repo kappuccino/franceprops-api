@@ -6,22 +6,30 @@ import {PutObjectCommand, ListObjectsCommand, DeleteObjectCommand, DeleteObjects
 import {mongoIdToFolder} from '../../app/tools.js'
 import {prompt} from '../../app/media/media.js'
 
+// Singleton: the SDK pools its sockets per client, a client per call meant a
+// TCP/TLS handshake per request (models-api, AUDIT-MEDIA P3)
+let awsClient
+
 function getAwsClient(){
+	if(awsClient) return awsClient
 
-	//if(awsClient) return awsClient
-
-	// mandatory ??
-	//AWS.config.setPromisesDependency(null)
-
-	return new S3Client({
+	awsClient = new S3Client({
 		region: process.env.AWS_REGION,
 		// S3 compatible provider (e.g. Scaleway), AWS when empty
 		endpoint: process.env.AWS_ENDPOINT || undefined,
 		credentials: {
 			accessKeyId: process.env.AWS_KEY,
 			secretAccessKey: process.env.AWS_SECRET,
+		},
+		// Wider pool, and a stuck socket is dropped instead of held forever
+		requestHandler: {
+			connectionTimeout: 5000,
+			requestTimeout: 30000,
+			httpsAgent: {maxSockets: 256}
 		}
 	})
+
+	return awsClient
 }
 
 function sanytise_key(key){
@@ -207,3 +215,45 @@ export async function getBytes(media){
 	}
 }
 
+
+
+// —— By key (product pictures: no Media document)
+
+export async function putObject(key, body, contentType){
+	await getAwsClient().send(new PutObjectCommand({
+		Bucket: process.env.AWS_S3_BUCKET,
+		Key: sanytise_key(key),
+		Body: body,
+		ContentType: contentType || mime.getType(key) || 'application/octet-stream'
+	}))
+
+	return key
+}
+
+// The body as a stream, null when the key does not exist
+export async function readStream(key){
+	try{
+		const res = await getAwsClient().send(new GetObjectCommand({
+			Bucket: process.env.AWS_S3_BUCKET,
+			Key: sanytise_key(key)
+		}))
+
+		return res.Body
+	} catch(e){
+		if(e.name === 'NoSuchKey' || e.$metadata?.httpStatusCode === 404) return null
+		throw e
+	}
+}
+
+// A missing key is not an error (S3 answers the same)
+export async function removeKeys(keys){
+	for(let i = 0; i < keys.length; i += 1000){
+		await getAwsClient().send(new DeleteObjectsCommand({
+			Bucket: process.env.AWS_S3_BUCKET,
+			Delete: {
+				Objects: keys.slice(i, i + 1000).map(key => ({Key: sanytise_key(key)})),
+				Quiet: true
+			}
+		}))
+	}
+}

@@ -5,7 +5,8 @@
 // Each source has its own file (sources/<key>.js), with its own fetch logic:
 //   list() → async iterable of pages [{externalId, hash, ref}], the full catalogue
 //   fetchProduct(externalId) → raw product, null when it's gone
-//   normalize(raw) → FranceProps product fields {ref, title}, same shape for every source
+//   normalize(raw) → FranceProps product fields {ref, title, picture, gallery},
+//     same shape for every source (pictures: sources/pictures.js)
 export const sources = {
 	xxo: {
 		label: 'XXO',
@@ -51,4 +52,10 @@ export async function getAdapter(key){
 // Jobs processed in parallel by the worker (product jobs, the list is alone)
 export function concurrency(key){
 	return sources[key]?.concurrency || Number(process.env.IMPORT_CONCURRENCY) || 4
+}
+
+// Pictures downloaded in parallel from a source: kept low, their servers
+// answer the visitors of their own site meanwhile
+export function pictureConcurrency(key){
+	return sources[key]?.pictureConcurrency || Number(process.env.IMPORT_PICTURE_CONCURRENCY) || 3
 }

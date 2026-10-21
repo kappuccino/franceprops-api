@@ -1,5 +1,6 @@
 import {createClient} from '../graphql-client.js'
 import {contentHash} from '../hash.js'
+import {pictures} from './pictures.js'
 
 // Lanzani: the main /graphql endpoint of their api (no service endpoint there),
 // with a dedicated user and a long lived token (getUserFromJWT { jwt(expiresIn) }).
@@ -110,6 +111,7 @@ export async function fetchProduct(externalId){
 export function normalize(raw){
 	return {
 		ref: raw.code || null, // reused or empty at some sources: a label only
-		title: raw.titleFR || raw.titleERP || raw.code
+		title: raw.titleFR || raw.titleERP || raw.code,
+		...pictures(raw.picture, raw.gallery)
 	}
 }

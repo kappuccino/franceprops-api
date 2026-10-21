@@ -2,6 +2,8 @@ import {canAccessTenant, genFailedMutation, getMedia, getUser, isAdmin, isServic
 import * as requestApi from '../request/request.js'
 import * as customerApi from '../customer/customer.js'
 import * as tenantApi from '../tenant/tenant.js'
+import * as productApi from '../product/product.js'
+import {pictureUrl} from '../picture/picture.js'
 import {requestNumber} from '../request/number.js'
 
 // Quote requests. Dashboard: a manager reaches the requests and the parts of
@@ -64,12 +66,14 @@ const RequestPart = `
   }
 `
 
+// picture: the current one of the product (ref and title are the ones asked)
 const RequestProduct = `
   type RequestProduct {
     _product: String
     ref: String
     title: String
     quantity: Int
+    picture: ProductPicture
   }
 `
 
@@ -194,6 +198,13 @@ export default {
 			totalHT: (obj, args, context) => requestApi.totals(visibleParts(obj, context))?.totalHT ?? null,
 			vat: (obj, args, context) => requestApi.totals(visibleParts(obj, context))?.vat ?? null,
 			totalTTC: (obj, args, context) => requestApi.totals(visibleParts(obj, context))?.totalTTC ?? null,
+		},
+
+		RequestProduct: {
+			picture: async obj => {
+				const product = obj._product && await productApi.getById(obj._product)
+				return product?.picture ? {...product.picture, url: pictureUrl(product.source, product.picture)} : null
+			}
 		},
 
 		RequestPart: {

@@ -1,4 +1,6 @@
 import {createClient} from '../graphql-client.js'
+import {contentHash} from '../hash.js'
+import {pictures, pictureUrls} from './pictures.js'
 
 // XXO: the /graphql_web endpoint of their api, reserved to the "service"
 // accounts (10 years token minted on their dashboard, /token page).
@@ -20,6 +22,7 @@ const LIST = `query($params:ProductAggregateParams){
 			status
 			priceRental
 			updated
+			gallery{order media{url}}
 		}
 	}
 }`
@@ -73,7 +76,8 @@ function client(){
 }
 
 // Published products, one page at a time: [{externalId, hash, ref}]. The hash
-// is the last save on XXO (refreshed by every edit of the product).
+// is the last save on XXO (refreshed by every edit of the product) and the
+// urls of its pictures.
 export async function* list(){
 	const query = client()
 
@@ -85,7 +89,7 @@ export async function* list(){
 		const data = aggregateProduct?.data || []
 		yield data
 			.filter(isPublished)
-			.map(product => ({externalId: product._id, hash: product.updated, ref: product.ref}))
+			.map(product => ({externalId: product._id, hash: contentHash([product.updated, pictureUrls(null, product.gallery)]), ref: product.ref}))
 
 		if(data.length < PAGE) break
 	}
@@ -110,6 +114,7 @@ export function normalize(raw){
 
 	return {
 		ref: raw.ref,
-		title: label || raw.titleFR || raw.modelName || raw.ref
+		title: label || raw.titleFR || raw.modelName || raw.ref,
+		...pictures(null, raw.gallery)
 	}
 }

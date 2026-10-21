@@ -30,6 +30,7 @@ const ImportSource = `
 
     paused: Boolean
     counts: ImportCounts
+    pictureCounts: ImportCounts
     workers: Int
     lastRun: ImportRun
   }
@@ -49,6 +50,7 @@ const ImportRun = `
     _id: String
     source: String
     status: String
+    full: Boolean
 
     startedAt: Date
     listedAt: Date
@@ -122,7 +124,7 @@ export default {
 	Query: `
     importSources(_tenant: String): [ImportSource]
     importRuns(source: String! limit: Int): [ImportRun]
-    importFailedJobs(source: String! limit: Int skip: Int): ImportJobs
+    importFailedJobs(source: String! kind: String limit: Int skip: Int): ImportJobs
 	`,
 
 	QueryResolvers: {
@@ -140,11 +142,11 @@ export default {
 			return importApi.getRuns(source, limit || 20)
 		},
 
-		// The stack traces stay for the admins
-		importFailedJobs: async (obj, {source, limit, skip}, context) => {
+		// kind: catalogue (default) or pictures. The stack traces stay for the admins.
+		importFailedJobs: async (obj, {source, kind, limit, skip}, context) => {
 			await checkSource(context, source)
 
-			const jobs = await importApi.getFailedJobs(source, {limit: limit || 50, skip: skip || 0})
+			const jobs = await importApi.getFailedJobs(source, {kind: kind || 'catalogue', limit: limit || 50, skip: skip || 0})
 			if(!isAdmin(context)) jobs.data.forEach(job => job.stacktrace = [])
 
 			return jobs
@@ -162,7 +164,7 @@ export default {
 	//--
 
 	Mutation: `
-		importStart(source: String!): ImportMutation @admin
+		importStart(source: String! full: Boolean): ImportMutation @admin
 		importPause(source: String!): ImportMutation @admin
 		importResume(source: String!): ImportMutation @admin
 		importStop(source: String!): ImportMutation @admin
@@ -171,7 +173,7 @@ export default {
 	`,
 
 	MutationResolvers: {
-		importStart: (obj, {source}, context) => mutation(context, async () => ({run: await importApi.start(source)})),
+		importStart: (obj, {source, full}, context) => mutation(context, async () => ({run: await importApi.start(source, {full: !!full})})),
 		importPause: (obj, {source}, context) => mutation(context, () => importApi.pause(source)),
 		importResume: (obj, {source}, context) => mutation(context, () => importApi.resume(source)),
 		importStop: (obj, {source}, context) => mutation(context, () => importApi.stop(source)),

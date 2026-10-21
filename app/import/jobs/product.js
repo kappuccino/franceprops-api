@@ -3,13 +3,15 @@ import {UnrecoverableError} from 'bullmq'
 
 import {getAdapter} from '../sources/index.js'
 import {count, removeProduct} from '../import.js'
+import {syncPictures} from '../pictures.js'
 
 const ImportItem = mongoose.model('ImportItem')
 const ImportRun = mongoose.model('ImportRun')
 const Product = mongoose.model('Product')
 
 // "product" job: the raw product goes to its ImportItem, its normalized
-// fields to the Product of the catalogue (created on the first import)
+// fields to the Product of the catalogue (created on the first import), its
+// pictures to the picture queue
 export async function handle(job, source){
 	const {_run, externalId, hash} = job.data
 
@@ -33,7 +35,7 @@ export async function handle(job, source){
 		return 'gone'
 	}
 
-	const fields = adapter.normalize(raw)
+	const {picture, gallery, ...fields} = adapter.normalize(raw)
 
 	let $product = item._product && await Product.findOne({_id: item._product})
 	const isNew = !$product
@@ -44,6 +46,7 @@ export async function handle(job, source){
 	$product.set({...fields, _tenant: item._tenant, removedAt: undefined})
 
 	await $product.save()
+	await syncPictures(source, $product._id, {picture, gallery})
 
 	item.set({raw, hash, status: 'imported', error: undefined, importedAt: new Date(), _product: $product._id})
 	item.markModified('raw')

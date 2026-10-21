@@ -51,6 +51,25 @@ export function getUrl(media){
 	return local.getUrl(media)
 }
 
+// —— By key (product pictures: no Media document)
+
+export function putObject(key, body, contentType){
+	if(getStrategy() === 'aws') return aws.putObject(key, body, contentType)
+	return local.putObject(key, body)
+}
+
+// The stored file as a stream, null when it does not exist
+export function readStream(key){
+	if(getStrategy() === 'aws') return aws.readStream(key)
+	return local.readStream(key)
+}
+
+export function removeKeys(keys){
+	if(!keys.length) return
+	if(getStrategy() === 'aws') return aws.removeKeys(keys)
+	return local.removeKeys(keys)
+}
+
 export function getStrategy(){
 	return process.env.STORAGE
 }

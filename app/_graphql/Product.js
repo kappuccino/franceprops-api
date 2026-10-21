@@ -1,6 +1,7 @@
 import {canAccessTenant, isAdmin, isService, unauthorized} from './_helper.js'
 import * as productApi from '../product/product.js'
 import * as tenantApi from '../tenant/tenant.js'
+import {pictureUrl} from '../picture/picture.js'
 
 // --
 
@@ -16,8 +17,22 @@ const Product = `
     externalId: String
     removedAt: Date
 
+    picture: ProductPicture
+    gallery: [ProductPicture]
+
     createdAt: Date
     updatedAt: Date
+  }
+`
+
+// url: base of the thumbnails, "<url>/<size>.<format>" (app/picture/route.js),
+// null until the picture is stored
+const ProductPicture = `
+  type ProductPicture {
+    url: String
+    width: Int
+    height: Int
+    status: String
   }
 `
 
@@ -45,6 +60,7 @@ const ProductSearchParams = `
 export default {
 	TypeDefs: [
 		Product,
+		ProductPicture,
 		ProductSearch,
 		ProductSearchParams
 	],
@@ -86,6 +102,10 @@ export default {
 	Resolvers: {
 		Product: {
 			tenant: obj => obj._tenant ? tenantApi.getById(obj._tenant) : null,
+
+			// The url needs the source of the product
+			picture: obj => obj.picture ? {...obj.picture, url: pictureUrl(obj.source, obj.picture)} : null,
+			gallery: obj => (obj.gallery || []).map(pic => ({...pic, url: pictureUrl(obj.source, pic)})),
 		}
 	},
 

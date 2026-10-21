@@ -1,4 +1,5 @@
-import {readdir, readFile, mkdir, stat, copyFile, rmdir, unlink} from 'fs/promises'
+import {createReadStream} from 'fs'
+import {readdir, readFile, writeFile, mkdir, stat, copyFile, rmdir, unlink} from 'fs/promises'
 import {dirname} from 'path'
 import {createHash} from 'crypto'
 
@@ -126,4 +127,33 @@ export function getBytes(media){
 	const path = getPath(media)
 
 	return readFile(path)
+}
+
+
+// —— By key (product pictures: no Media document)
+
+export async function putObject(key, body){
+	const dest = process.env.STORAGE_ROOT + sanytise_path(key)
+
+	await mkdir(dirname(dest), {recursive: true})
+	await writeFile(dest, body)
+
+	return key
+}
+
+// The file as a stream, null when it does not exist
+export async function readStream(key){
+	const file = process.env.STORAGE_ROOT + sanytise_path(key)
+
+	try{
+		await stat(file)
+	} catch(e){
+		return null
+	}
+
+	return createReadStream(file)
+}
+
+export async function removeKeys(keys){
+	await Promise.all(keys.map(remove))
 }
