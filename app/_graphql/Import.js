@@ -50,6 +50,7 @@ const ImportRun = `
     _id: String
     source: String
     status: String
+    type: String
     full: Boolean
 
     startedAt: Date
@@ -168,6 +169,7 @@ export default {
 		importPause(source: String!): ImportMutation @admin
 		importResume(source: String!): ImportMutation @admin
 		importStop(source: String!): ImportMutation @admin
+		importRebuild(source: String!): ImportMutation @admin
 		importReset(source: String!): ImportMutation @admin
 		importRetry(source: String! jobId: String): ImportMutation @admin
 	`,
@@ -176,6 +178,7 @@ export default {
 		importStart: (obj, {source, full}, context) => mutation(context, async () => ({run: await importApi.start(source, {full: !!full})})),
 		importPause: (obj, {source}, context) => mutation(context, () => importApi.pause(source)),
 		importResume: (obj, {source}, context) => mutation(context, () => importApi.resume(source)),
+		importRebuild: (obj, {source}, context) => mutation(context, async () => ({run: await importApi.rebuild(source)})),
 		importStop: (obj, {source}, context) => mutation(context, () => importApi.stop(source)),
 		importReset: (obj, {source}, context) => mutation(context, () => importApi.reset(source)),
 		importRetry: (obj, {source, jobId}, context) => mutation(context, async () => ({retried: await importApi.retry(source, jobId)})),

@@ -35,6 +35,22 @@ export async function start(source, {full=false}={}){
 	return run.toObject()
 }
 
+// The catalogue built again from the raw answers kept (ImportItem.raw), the
+// source isn't called: a normalization changed. A run of its own, exclusive
+// with the imports.
+export async function rebuild(source){
+	if(!isSource(source)) throw new Error('unknown source')
+	if(!isConfigured(source)) throw new Error('source not configured')
+	if(await ImportRun.exists({source, status: {$in: ACTIVE}})) throw new Error('import already running')
+
+	const run = await ImportRun.create({source, type: 'rebuild', status: 'running', startedAt: new Date()})
+
+	// A single attempt: started over, it would count its products twice
+	await getQueue(source).add('rebuild', {_run: run._id.toString()}, {jobId: `rebuild-${run._id}`, attempts: 1})
+
+	return run.toObject()
+}
+
 // State of every source: its tenant, its queue, its last run
 export async function getSources(){
 	const tenants = await Tenant.find({importSource: {$in: sourceKeys}}, {name: 1, importSource: 1}).lean()
@@ -99,11 +115,11 @@ export async function getFailedJobs(source, {kind='catalogue', limit=50, skip=0}
 	}
 }
 
-// The jobs in progress end, no new one starts. Not while listing: the list
-// job would go on adding the product jobs, stop() is the way to end it.
+// The jobs in progress end, no new one starts. Not while listing or
+// rebuilding: a single job goes on until its end, stop() is the way to end it.
 // The pictures queue follows.
 export async function pause(source){
-	if(await ImportRun.exists({source, status: 'listing'})) throw new Error('import listing')
+	if(await ImportRun.exists({source, $or: [{status: 'listing'}, {status: 'running', type: 'rebuild'}]})) throw new Error('import listing')
 
 	await Promise.all(KINDS.map(kind => getQueue(source, kind).pause()))
 }
@@ -174,10 +190,11 @@ export async function count(_run, field, n=1){
 }
 
 // Over once the listing is done and every product job processed. The update
-// is atomic: a single caller wins it, and marks the gone products.
+// is atomic: a single caller wins it, and marks the gone products. Never a
+// rebuild (it ends itself, nothing is gone).
 export async function finish(_run){
 	const run = await ImportRun.findOneAndUpdate(
-		{_id: _run, status: 'running', $expr: {$gte: [PROCESSED, '$total']}},
+		{_id: _run, status: 'running', type: {$ne: 'rebuild'}, $expr: {$gte: [PROCESSED, '$total']}},
 		{$set: {status: 'done', finishedAt: new Date()}},
 		{new: true}
 	).lean()

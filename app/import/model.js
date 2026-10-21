@@ -45,6 +45,7 @@ ImportItem.pre('save', function(next){
 const ImportRun = new mongoose.Schema({
 	source: {type: String, enum: sourceKeys, required: true, index: true},
 	status: {type: String, enum: ['listing', 'running', 'done', 'failed', 'stopped', 'reset'], default: 'listing', index: true},
+	type: {type: String, enum: ['import', 'rebuild'], default: 'import'}, // rebuild: from the raw answers kept, no listing
 	full: Boolean, // every product imported again, unchanged or not
 
 	startedAt: Date,

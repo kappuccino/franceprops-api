@@ -15,15 +15,17 @@ const Product = mongoose.model('Product')
 //
 // The picture jobs write on the same product meanwhile: the write is
 // conditional on picturesRev, which every write increments, and is merged again
-// when a picture job got there first.
+// when a picture job got there first. → true when the pictures changed
 export async function syncPictures(source, _product, wanted){
 	for(let attempt = 0; attempt < 5; attempt++){
 		const current = await Product.findOne({_id: _product}, {picture: 1, gallery: 1, picturesRev: 1}).lean()
-		if(!current) return
+		if(!current) return false
 
 		const {picture, gallery, removed} = merge(current, wanted)
 
-		if(!isSame(current, picture, gallery)){
+		const changed = !isSame(current, picture, gallery)
+
+		if(changed){
 			const rev = current.picturesRev || 0
 			const res = await Product.updateOne(
 				{_id: _product, picturesRev: rev || {$in: [0, null]}},
@@ -36,7 +38,7 @@ export async function syncPictures(source, _product, wanted){
 		}
 
 		await enqueue(source, _product, [picture, ...gallery].filter(pic => pic?.status === 'pending'))
-		return
+		return changed
 	}
 
 	throw new Error('pictures updated concurrently')
