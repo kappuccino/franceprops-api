@@ -19,8 +19,12 @@ import './import/model.js'
 mongoose.set('strictQuery', true)
 
 mongoose.connect(process.env.MONGO, {
-	//useNewUrlParser: true,
-	//useUnifiedTopology: true
+	family: 4,
+	maxPoolSize: 10,
+	maxIdleTimeMS: 60000,
+	minPoolSize: 2,
+	serverSelectionTimeoutMS: 5000,
+	connectTimeoutMS: 10000
 })
 
 mongoose.connection.on('error', (err) => {
