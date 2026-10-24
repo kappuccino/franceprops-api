@@ -1,0 +1,19 @@
+# Local dependencies never go in the image: it installs its own
+node_modules
+
+# Keep the temp folders (the app writes into them, they are tracked) but not their local content
+temp/*
+!temp/.gitignore
+temp-cache/*
+!temp-cache/.gitignore
+
+.git
+.githooks
+.idea
+docker
+test
+**/.DS_Store
+
+# Secrets: the env is given at run time, a local .env must never be baked into the image
+.env
+.env.*
